@@ -1,0 +1,141 @@
+.header {
+  width: 100%;
+  height: 72px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 32px;
+
+  background: linear-gradient(135deg, #111827, #1e3a8a);
+  color: white;
+
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.logo::before {
+  content: "G";
+  
+  width: 40px;
+  height: 40px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 10px;
+
+  background: white;
+  color: #1e3a8a;
+
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.navigation {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.navigation a {
+  padding: 10px 16px;
+
+  text-decoration: none;
+  color: #dbeafe;
+
+  border-radius: 8px;
+
+  font-size: 14px;
+  font-weight: 500;
+
+  transition: 0.2s;
+}
+
+.navigation a:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-actions button {
+  width: 40px;
+  height: 40px;
+
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+
+  cursor: pointer;
+
+  font-size: 18px;
+
+  transition: 0.2s;
+}
+
+.header-actions button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* TABLETTE */
+
+@media (max-width: 900px) {
+  .header {
+    padding: 0 20px;
+  }
+
+  .navigation {
+    gap: 2px;
+  }
+
+  .navigation a {
+    padding: 8px 10px;
+  }
+}
+
+/* TÉLÉPHONE */
+
+@media (max-width: 700px) {
+  .header {
+    height: 64px;
+    padding: 0 15px;
+  }
+
+  .navigation {
+    display: none;
+  }
+
+  .logo h1 {
+    font-size: 18px;
+  }
+
+  .logo::before {
+    width: 34px;
+    height: 34px;
+  }
+}
