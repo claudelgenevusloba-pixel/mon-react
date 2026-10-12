@@ -1,262 +1,155 @@
-.app {
-  min-height: 100vh;
+* {
+  box-sizing: border-box;
 }
 
-.app-body {
-  display: flex;
-  min-height: calc(100vh - 72px);
-}
-
-.main-content {
-  flex: 1;
-  padding: 32px;
-  background: #f8fafc;
+html,
+body,
+#root {
+  width: 100%;
   min-width: 0;
-}
+  min-height: 100%;
 
-.dashboard-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 30px;
-}
-
-.dashboard-header h2 {
-  margin: 0 0 6px;
-  font-size: 28px;
-  color: #111827;
-}
-
-.dashboard-header p {
   margin: 0;
-  color: #6b7280;
+  padding: 0;
 }
 
-.add-button {
+body {
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Arial,
+    sans-serif;
+
+  background: #f4f7fb;
+
+  color: #243b53;
+}
+
+button,
+input,
+textarea,
+select {
+  font-family: inherit;
+}
+
+/* =========================================================
+   APPLICATION
+========================================================= */
+
+.app-layout {
+  width: 100%;
+  min-height: 100vh;
+
+  display: flex;
+
+  background: #f4f7fb;
+}
+
+/* =========================================================
+   ZONE PRINCIPALE
+========================================================= */
+
+.app-main {
+  width: calc(100% - 260px);
+  min-width: 0;
+  min-height: 100vh;
+
+  margin-left: 260px;
+
+  display: flex;
+  flex-direction: column;
+
+  background: #f4f7fb;
+}
+
+/* =========================================================
+   CONTENU
+========================================================= */
+
+.app-content {
+  width: 100%;
+  min-width: 0;
+
+  flex: 1;
+
+  padding: 25px 30px;
+
+  overflow-x: hidden;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 900px) {
+  .app-main {
+    width: calc(100% - 225px);
+
+    margin-left: 225px;
+  }
+
+  .app-content {
+    padding: 22px;
+  }
+}
+
+@media (max-width: 650px) {
+  .app-main {
+    width: calc(100% - 210px);
+
+    margin-left: 210px;
+  }
+
+  .app-content {
+    padding: 18px 14px;
+  }
+}   /* =========================================================
+   SCROLLBAR APPLICATION
+========================================================= */
+
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: #eef2f7;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #b8c4d3;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #8fa0b5;
+}
+
+/* =========================================================
+   LIENS
+========================================================= */
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* =========================================================
+   BOUTONS
+========================================================= */
+
+button {
   border: none;
-  border-radius: 9px;
-  padding: 12px 18px;
-
-  background: #2563eb;
-  color: white;
-
-  font-size: 14px;
-  font-weight: 600;
-
   cursor: pointer;
 }
 
-.add-button:hover {
-  background: #1d4ed8;
-}
+/* =========================================================
+   PROTECTION DES CONTENUS
+========================================================= */
 
-/* STATISTIQUES */
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 18px;
-  margin-bottom: 24px;
-}
-
-.stat-card {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-
-  padding: 20px;
-
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-}
-
-.stat-icon {
-  width: 48px;
-  height: 48px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  background: #eff6ff;
-  border-radius: 10px;
-
-  font-size: 22px;
-}
-
-.stat-card p {
-  margin: 0 0 5px;
-  color: #6b7280;
-  font-size: 13px;
-}
-
-.stat-card h3 {
-  margin: 0;
-  font-size: 24px;
-  color: #111827;
-}
-
-/* CARTES */
-
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: 1.4fr 1fr;
-  gap: 20px;
-}
-
-.dashboard-card {
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 22px;
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-
-  margin-bottom: 18px;
-}
-
-.card-header h3 {
-  margin: 0;
-  color: #111827;
-}
-
-.card-header a {
-  color: #2563eb;
-  text-decoration: none;
-  font-size: 13px;
-}
-
-/* TÂCHES */
-
-.task {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-
-  padding: 15px 0;
-
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.task:last-child {
-  border-bottom: none;
-}
-
-.task strong {
-  font-size: 14px;
-  color: #1f2937;
-}
-
-.task p {
-  margin: 5px 0 0;
-  color: #9ca3af;
-  font-size: 12px;
-}
-
-.status {
-  padding: 6px 9px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.progress {
-  background: #dbeafe;
-  color: #1d4ed8;
-}
-
-.waiting {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.done {
-  background: #dcfce7;
-  color: #166534;
-}
-
-/* ACTIVITÉS */
-
-.activity {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-
-  padding: 14px 0;
-
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.activity:last-child {
-  border-bottom: none;
-}
-
-.activity > span {
-  width: 38px;
-  height: 38px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  background: #f3f4f6;
-  border-radius: 9px;
-}
-
-.activity strong {
-  font-size: 13px;
-  color: #374151;
-}
-
-.activity p {
-  margin: 4px 0 0;
-  color: #9ca3af;
-  font-size: 11px;
-}
-
-/* TABLETTE */
-
-@media (max-width: 1000px) {
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .dashboard-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* MOBILE */
-
-@media (max-width: 700px) {
-  .main-content {
-    padding: 20px 15px;
-  }
-
-  .dashboard-header {
-    align-items: flex-start;
-    gap: 15px;
-    flex-direction: column;
-  }
-
-  .dashboard-header h2 {
-    font-size: 22px;
-  }
-
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .task {
-    align-items: flex-start;
-    gap: 10px;
-    flex-direction: column;
-  }
+img {
+  max-width: 100%;
+  display: block;
 }

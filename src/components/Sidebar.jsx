@@ -1,60 +1,184 @@
-import { Link } from "react-router-dom"
-import "./Sidebar.css"
+import React from "react";
+import {
+  LayoutDashboard,
+  Users,
+  ClipboardList,
+  FileText,
+  Bell,
+  Settings,
+  LogOut,
+  Building2,
+} from "lucide-react";
+import { NavLink } from "react-router-dom";
 
-function Sidebar() {
+import { PERMISSIONS } from "../config/permissions";
+import { aPermission } from "../config/access";
+
+import "./Sidebar.css";
+
+function Sidebar({ utilisateur, onDeconnexion }) {
+  const nomEntreprise = "Groupe GAIN SARL";
+
+  const peutVoir = (permission) => {
+    return aPermission(utilisateur, permission);
+  };
+
+  const liens = [
+    {
+      to: "/dashboard",
+      label: "Tableau de bord",
+      icon: LayoutDashboard,
+      permission: PERMISSIONS.VOIR_DASHBOARD,
+    },
+    {
+      to: "/employes",
+      label: "Employés",
+      icon: Users,
+      permission: PERMISSIONS.VOIR_EMPLOYES,
+    },
+    {
+      to: "/taches",
+      label: "Tâches",
+      icon: ClipboardList,
+      permission: PERMISSIONS.VOIR_TACHES,
+    },
+    {
+      to: "/demandes",
+      label: "Demandes",
+      icon: FileText,
+      permission: PERMISSIONS.VOIR_DEMANDES,
+    },
+    {
+      to: "/rapports",
+      label: "Rapports",
+      icon: FileText,
+      permission: PERMISSIONS.VOIR_RAPPORTS,
+    },
+    {
+      to: "/notifications",
+      label: "Notifications",
+      icon: Bell,
+      permission: PERMISSIONS.VOIR_NOTIFICATIONS,
+    },
+  ];
+
+  const liensAutorises = liens.filter((lien) =>
+    peutVoir(lien.permission)
+  );
+
+  const peutVoirParametres = peutVoir(
+    PERMISSIONS.VOIR_PARAMETRES
+  );
+
   return (
-    <aside className="sidebar">
+    <aside className="app-sidebar">
 
-      <div className="sidebar-title">
-        <span className="sidebar-logo">G</span>
-        <span>GAIN OFFICE</span>
+      {/* =====================================================
+          LOGO / ENTREPRISE
+      ===================================================== */}
+
+      <div className="sidebar-brand">
+
+        <div className="sidebar-logo">
+          <Building2
+            size={26}
+            strokeWidth={2.2}
+          />
+        </div>
+
+        <div className="sidebar-brand-text">
+          <strong>GAIN OFFICE</strong>
+          <span>{nomEntreprise}</span>
+        </div>
+
       </div>
 
-      <nav className="sidebar-menu">
 
-        <Link to="/" className="active">
-          <span>📊</span>
-          <span>Dashboard</span>
-        </Link>
+      {/* =====================================================
+          MENU PRINCIPAL
+      ===================================================== */}
 
-        <Link to="/employes">
-          <span>👥</span>
-          <span>Employés</span>
-        </Link>
+      <nav className="sidebar-nav">
 
-        <Link to="/taches">
-          <span>📋</span>
-          <span>Tâches</span>
-        </Link>
+        <div className="sidebar-section-title">
+          MENU PRINCIPAL
+        </div>
 
-        <Link to="/demandes">
-          <span>📩</span>
-          <span>Demandes</span>
-        </Link>
+        {liensAutorises.map((lien) => {
+          const Icon = lien.icon;
 
-        <Link to="/notifications">
-          <span>🔔</span>
-          <span>Notifications</span>
-        </Link>
+          return (
+            <NavLink
+              key={lien.to}
+              to={lien.to}
+              className={({ isActive }) =>
+                isActive
+                  ? "sidebar-link active"
+                  : "sidebar-link"
+              }
+            >
+              <Icon
+                className="sidebar-link-icon"
+                size={19}
+                strokeWidth={2}
+              />
+
+              <span>{lien.label}</span>
+            </NavLink>
+          );
+        })}
 
       </nav>
 
-      <div className="sidebar-bottom">
 
-        <Link to="/parametres">
-          <span>⚙️</span>
-          <span>Paramètres</span>
-        </Link>
+      {/* =====================================================
+          FOOTER
+      ===================================================== */}
 
-        <Link to="/">
-          <span>🚪</span>
+      <div className="sidebar-footer">
+
+        {/* PARAMÈTRES */}
+
+        {peutVoirParametres && (
+          <NavLink
+            to="/parametres"
+            className={({ isActive }) =>
+              isActive
+                ? "sidebar-link sidebar-footer-link active"
+                : "sidebar-link sidebar-footer-link"
+            }
+          >
+            <Settings
+              className="sidebar-link-icon"
+              size={19}
+              strokeWidth={2}
+            />
+
+            <span>Paramètres</span>
+          </NavLink>
+        )}
+
+
+        {/* DÉCONNEXION */}
+
+        <button
+          type="button"
+          className="sidebar-link sidebar-logout"
+          onClick={onDeconnexion}
+        >
+          <LogOut
+            className="sidebar-link-icon"
+            size={19}
+            strokeWidth={2}
+          />
+
           <span>Déconnexion</span>
-        </Link>
+        </button>
 
       </div>
 
     </aside>
-  )
+  );
 }
 
-export default Sidebar
+export default Sidebar;
