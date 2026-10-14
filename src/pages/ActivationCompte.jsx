@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { CheckCircle2, LoaderCircle, LockKeyhole, ShieldAlert } from "lucide-react";
 import "./ActivationCompte.css";
@@ -9,12 +9,17 @@ export default function ActivationCompte() {
   const [searchParams] = useSearchParams();
 
   const token = searchParams.get("token");
+  const erreurInitiale = !token
+    ? "Lien d'activation invalide."
+    : !API_URL
+      ? "Le service d'activation n'est pas configuré pour ce site. Contactez l'administrateur."
+      : "";
 
-  const [chargement, setChargement] = useState(true);
+  const [chargement, setChargement] = useState(Boolean(token && API_URL));
   const [activation, setActivation] = useState(false);
 
   const [invitation, setInvitation] = useState(null);
-  const [erreur, setErreur] = useState("");
+  const [erreur, setErreur] = useState(erreurInitiale);
 
   const [motDePasse, setMotDePasse] = useState("");
   const [confirmation, setConfirmation] = useState("");
@@ -32,28 +37,23 @@ export default function ActivationCompte() {
 
   const [succes, setSucces] = useState(false);
 
-  useEffect(() => {
-    verifierInvitation();
-  }, []);
-
-  const verifierInvitation = async () => {
-    if (!token) {
-      setErreur("Lien d'activation invalide.");
-      setChargement(false);
-      return;
-    }
-
+  const verifierInvitation = useCallback(async (signal) => {
     try {
       const response = await fetch(
-        `${API_URL}/invitations/${encodeURIComponent(token)}`
+        `${API_URL}/invitations/${encodeURIComponent(token)}`,
+        { headers: { Accept: "application/json" }, signal }
       );
 
-      const resultat = await response.json();
+      const resultat = await response.json().catch(() => ({}));
 
       if (!response.ok) {
         throw new Error(
           resultat.message || "Cette invitation n'est plus valide."
         );
+      }
+
+      if (!resultat.data?.email) {
+        throw new Error("Le serveur a renvoyé une réponse invalide.");
       }
 
       setInvitation(resultat.data);
@@ -68,18 +68,39 @@ export default function ActivationCompte() {
       setAdresse(resultat.data?.adresse || "");
       setVille(resultat.data?.ville || "");
     } catch (error) {
+      if (error.name === "AbortError") return;
       setErreur(
-        error.message || "Impossible de vérifier l'invitation."
+        error instanceof TypeError
+          ? "Impossible de joindre le serveur. Vérifiez que l'API est accessible et que CORS autorise ce site."
+          : error.message || "Impossible de vérifier l'invitation."
       );
     } finally {
-      setChargement(false);
+      if (!signal.aborted) setChargement(false);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    if (!token || !API_URL) return;
+
+    const controller = new AbortController();
+    Promise.resolve().then(() => {
+      if (!controller.signal.aborted) {
+        verifierInvitation(controller.signal);
+      }
+    });
+
+    return () => controller.abort();
+  }, [token, verifierInvitation]);
 
   const activerCompte = async (event) => {
     event.preventDefault();
 
     setErreur("");
+
+    if (!API_URL) {
+      setErreur("Le service d'activation n'est pas configuré pour ce site.");
+      return;
+    }
 
     if (motDePasse.length < 8) {
       setErreur(
@@ -127,18 +148,27 @@ export default function ActivationCompte() {
         }
       );
 
-      const resultat = await response.json();
+      const resultat = await response.json().catch(() => ({}));
 
       if (!response.ok) {
+        const premiereErreur = Object.values(resultat.errors || {})
+          .flat()
+          .find(Boolean);
         throw new Error(
-          resultat.message || "Impossible d'activer le compte."
+          premiereErreur || resultat.message || "Impossible d'activer le compte."
         );
+      }
+
+      if (resultat.data?.statut !== "actif") {
+        throw new Error("Le serveur n'a pas confirmé l'activation du compte.");
       }
 
       setSucces(true);
     } catch (error) {
       setErreur(
-        error.message || "Une erreur est survenue."
+        error instanceof TypeError
+          ? "Impossible de joindre le serveur. Vérifiez votre connexion et la configuration CORS."
+          : error.message || "Une erreur est survenue."
       );
     } finally {
       setActivation(false);
@@ -170,7 +200,7 @@ export default function ActivationCompte() {
             <ShieldAlert size={42} />
           </div>
 
-          <h1>Invitation invalide</h1>
+          <h1>Activation indisponible</h1>
 
           <p className="activation-description">
             {erreur}
