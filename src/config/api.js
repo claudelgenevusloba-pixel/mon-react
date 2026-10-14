@@ -1,19 +1,18 @@
-// src/config/api.js
-//
-// URL de base de l'API GAIN OFFICE.
-//
-// - Sur le PC (localhost:5173) : http://localhost:8000/api
-// - Sur un téléphone (192.168.x.x:5173, même Wi-Fi) :
-//   http://192.168.x.x:8000/api
-//
-// On déduit automatiquement l'hôte de l'origine de la page,
-// ce qui permet de tester le QR code entre PC et téléphone
-// sans modifier le code. VITE_API_URL permet une surcharge.
 
 const hote = window.location.hostname || "127.0.0.1";
+const apiConfiguree = import.meta.env.VITE_API_URL?.trim();
 
-export const API_URL =
-  import.meta.env.VITE_API_URL ||
-  `http://${hote}:8000/api`;
+// URL publique HTTPS de l'API en production (ex. "https://monsite.infinityfreeapp.com/api").
+// Priorité à la variable d'environnement VITE_API_URL (à définir dans le tableau
+// de bord Netlify) ; cette constante sert de repli si la variable est absente
+// au moment du build. Vide = comportement actuel (URL relative, uniquement
+// valable si le frontend et l'API partagent le même domaine).
+const API_URL_PROD = "";
 
+const API_URL = (
+  apiConfiguree ||
+  (import.meta.env.DEV ? `http://${hote}:8000/api` : API_URL_PROD)
+).replace(/\/$/, "");
+
+export { API_URL };
 export default API_URL;
