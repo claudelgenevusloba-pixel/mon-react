@@ -25,6 +25,8 @@ import Rapports from "./pages/Rapports";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
 import ActivationCompte from "./pages/ActivationCompte";
+import MotDePasseOublie from "./pages/MotDePasseOublie";
+import ReinitialisationMotDePasse from "./pages/ReinitialisationMotDePasse";
 import {
   analyserUtilisateur,
   aPermission,
@@ -591,6 +593,16 @@ function App() {
             <Route
   path="/activation-compte"
   element={<ActivationCompte />}
+/>
+
+            <Route
+  path="/mot-de-passe-oublie"
+  element={<MotDePasseOublie />}
+/>
+
+            <Route
+  path="/reinitialisation-mot-de-passe"
+  element={<ReinitialisationMotDePasse />}
 />
 
             <Route

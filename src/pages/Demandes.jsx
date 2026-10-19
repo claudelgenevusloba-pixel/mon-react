@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 import {
   Plus,
@@ -92,6 +92,21 @@ function Demandes({ utilisateur }) {
   })
 
   const [message, setMessage] = useState("")
+
+  /*
+   * OUVERTURE AUTOMATIQUE DE LA MODALE DE CRÉATION
+   * (lien « Nouvelle demande » du tableau de bord : /demandes?nouvelle=1)
+   */
+
+  useEffect(() => {
+    const params = new URLSearchParams(
+      window.location.search
+    )
+
+    if (params.get("nouvelle") === "1") {
+      setModalCreation(true)
+    }
+  }, [])
 
 
   /*

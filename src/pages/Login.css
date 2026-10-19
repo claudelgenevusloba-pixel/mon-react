@@ -722,3 +722,20 @@
     min-height: 50px;
   }
 }
+/* Lien Mot de passe oublie (page de connexion) */
+.login-forgot-link {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #1677d2;
+  font-size: 13px;
+  text-align: right;
+  cursor: pointer;
+}
+
+.login-forgot-link:hover {
+  text-decoration: underline;
+}

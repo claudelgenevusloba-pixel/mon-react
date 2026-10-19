@@ -395,6 +395,17 @@ function Login({ onConnexion }) {
 
                 </div>
 
+                <button
+                  type="button"
+                  className="login-forgot-link"
+                  onClick={() => {
+                    window.location.href =
+                      "/mot-de-passe-oublie";
+                  }}
+                >
+                  Mot de passe oublié ?
+                </button>
+
               </div>
 
               {/* ERREUR */}

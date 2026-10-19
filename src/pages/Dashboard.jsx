@@ -797,7 +797,7 @@ const peutNouvelleDemande =
 
   const allerNouvelleDemande =
     useCallback(() => {
-      navigate("/demandes/nouvelle");
+      navigate("/demandes?nouvelle=1");
     }, [navigate]);
 
   const allerNotifications =
