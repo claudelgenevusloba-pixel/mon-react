@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   Bell,
@@ -29,7 +29,7 @@ const PARAMETRES_PAR_DEFAUT = {
   notificationsTaches: true,
   notificationsDemandes: true,
   notificationsMessages: true,
-  langue: "FranÃ§ais",
+  langue: "Français",
   formatDate: "DD/MM/YYYY",
   afficherPhoto: true,
 };
@@ -89,7 +89,7 @@ function Parametres({ utilisateur }) {
       }
     } catch (error) {
       console.error(
-        "Erreur de lecture des paramÃ¨tres :",
+        "Erreur de lecture des paramètres :",
         error
       );
     }
@@ -118,20 +118,20 @@ function Parametres({ utilisateur }) {
     fonction:
       utilisateur?.role?.nom ||
       utilisateur?.role ||
-      "EmployÃ©",
+      "Employé",
   });
 
   const [entreprise, setEntreprise] = useState({
     nom: "Groupe GAIN SARL",
     email: "",
     telephone: "",
-    adresse: "Abidjan, CÃ´te dâ€™Ivoire",
+    adresse: "Abidjan, Côte d'Ivoire",
   });
 
   /*
-   * Configuration des rapports pÃ©riodiques.
-   * Valeurs stockÃ©es cÃ´tÃ© Laravel (parametre_entreprises).
-   * periodicite vide = aucune pÃ©riodicitÃ© imposÃ©e.
+   * Configuration des rapports périodiques.
+   * Valeurs stockées côté Laravel (parametre_entreprises).
+   * periodicite vide = aucune périodicité imposée.
    */
   const [configRapports, setConfigRapports] =
     useState({
@@ -192,7 +192,7 @@ function Parametres({ utilisateur }) {
       }
     } catch (error) {
       console.error(
-        "Erreur de chargement des paramÃ¨tres :",
+        "Erreur de chargement des paramètres :",
         error
       );
     }
@@ -256,20 +256,20 @@ function Parametres({ utilisateur }) {
       );
 
       afficherMessage(
-        "Vos prÃ©fÃ©rences ont Ã©tÃ© enregistrÃ©es."
+        "Vos préférences ont été enregistrées."
       );
     } catch (error) {
       console.error(error);
 
       afficherMessage(
-        "Impossible d'enregistrer vos prÃ©fÃ©rences.",
+        "Impossible d'enregistrer vos préférences.",
         "error"
       );
     }
   };
 
     const sauvegarderProfil = async () => {
-    // Validation cÃ´tÃ© frontend du format e-mail.
+    // Validation côté frontend du format e-mail.
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(profil.email)) {
       afficherMessage(
@@ -320,13 +320,13 @@ function Parametres({ utilisateur }) {
         );
       }
 
-      // Mise Ã  jour du contexte auth (localStorage + Ã©tat React)
-      // pour que le nouvel e-mail soit immÃ©diatement visible partout.
+      // Mise à jour du contexte auth (localStorage + état React)
+      // pour que le nouvel e-mail soit immédiatement visible partout.
       if (data.utilisateur) {
         setUtilisateur(data.utilisateur);
       }
 
-      // Conserve aussi une copie dans le localStorage dÃ©diÃ© (cache).
+      // Conserve aussi une copie dans le localStorage dédié (cache).
       try {
         localStorage.setItem(
           `gainOfficeProfil_${idUtilisateur}`,
@@ -343,7 +343,7 @@ function Parametres({ utilisateur }) {
       }
 
       afficherMessage(
-        "Votre profil a Ã©tÃ© mis Ã  jour avec succÃ¨s."
+        "Votre profil a été mis à jour avec succès."
       );
     } catch (error) {
       console.error(error);
@@ -426,7 +426,7 @@ function Parametres({ utilisateur }) {
   const sauvegarderEntreprise = () => {
     if (!peutModifierEntreprise) {
       afficherMessage(
-        "Vous n'avez pas l'autorisation de modifier les paramÃ¨tres de l'entreprise.",
+        "Vous n'avez pas l'autorisation de modifier les paramètres de l'entreprise.",
         "error"
       );
 
@@ -440,7 +440,7 @@ function Parametres({ utilisateur }) {
       );
 
       afficherMessage(
-        "Les informations de l'entreprise ont Ã©tÃ© enregistrÃ©es."
+        "Les informations de l'entreprise ont été enregistrées."
       );
     } catch (error) {
       console.error(error);
@@ -454,14 +454,14 @@ function Parametres({ utilisateur }) {
 
   /*
    * Sauvegarde de la configuration des rapports
-   * pÃ©riodiques â€” stockÃ©e dans Laravel, utilisÃ©e par
-   * le circuit hiÃ©rarchique (Ã©chÃ©ances, rappels,
+   * périodiques "” stockée dans Laravel, utilisée par
+   * le circuit hiérarchique (échéances, rappels,
    * niveaux de validation).
    */
   const sauvegarderRapports = async () => {
     if (!peutModifierEntreprise) {
       afficherMessage(
-        "Vous n'avez pas l'autorisation de modifier ces paramÃ¨tres.",
+        "Vous n'avez pas l'autorisation de modifier ces paramètres.",
         "error"
       );
 
@@ -484,7 +484,7 @@ function Parametres({ utilisateur }) {
             Authorization: `Bearer ${accessToken}`,
           },
           body: JSON.stringify({
-            /* Requis par l'API : on prÃ©serve la valeur en base */
+            /* Requis par l'API : on préserve la valeur en base */
             nom_entreprise:
               nomEntrepriseApi ||
               entreprise.nom ||
@@ -529,7 +529,7 @@ function Parametres({ utilisateur }) {
       }
 
       afficherMessage(
-        "La configuration des rapports a Ã©tÃ© enregistrÃ©e."
+        "La configuration des rapports a été enregistrée."
       );
     } catch (error) {
       console.error(error);
@@ -558,7 +558,7 @@ function Parametres({ utilisateur }) {
 
     if (motDePasse.nouveau.length < 8) {
       afficherMessage(
-        "Le nouveau mot de passe doit contenir au moins 8 caractÃ¨res.",
+        "Le nouveau mot de passe doit contenir au moins 8 caractères.",
         "error"
       );
 
@@ -631,7 +631,7 @@ function Parametres({ utilisateur }) {
       });
 
       afficherMessage(
-        "Mot de passe modifiÃ© avec succÃ¨s."
+        "Mot de passe modifié avec succès."
       );
     } catch (error) {
       console.error(error);
@@ -648,7 +648,7 @@ function Parametres({ utilisateur }) {
 
   const reinitialiserParametres = () => {
     const confirmation = window.confirm(
-      "Voulez-vous vraiment rÃ©initialiser vos prÃ©fÃ©rences personnelles ?"
+      "Voulez-vous vraiment réinitialiser vos préférences personnelles ?"
     );
 
     if (!confirmation) {
@@ -666,13 +666,13 @@ function Parametres({ utilisateur }) {
       );
 
       afficherMessage(
-        "Vos prÃ©fÃ©rences ont Ã©tÃ© rÃ©initialisÃ©es."
+        "Vos préférences ont été réinitialisées."
       );
     } catch (error) {
       console.error(error);
 
       afficherMessage(
-        "Impossible de rÃ©initialiser les prÃ©fÃ©rences.",
+        "Impossible de réinitialiser les préférences.",
         "error"
       );
     }
@@ -687,7 +687,7 @@ function Parametres({ utilisateur }) {
 
     {
       id: "securite",
-      label: "SÃ©curitÃ©",
+      label: "Sécurité",
       icon: Shield,
     },
 
@@ -699,7 +699,7 @@ function Parametres({ utilisateur }) {
 
     {
       id: "apparence",
-      label: "PrÃ©fÃ©rences",
+      label: "Préférences",
       icon: User,
     },
   ];
@@ -722,11 +722,11 @@ function Parametres({ utilisateur }) {
             </div>
 
             <div>
-              <h2>AccÃ¨s refusÃ©</h2>
+              <h2>Accès refusé</h2>
 
               <p>
                 Vous n'avez pas l'autorisation
-                d'accÃ©der aux paramÃ¨tres.
+                d'accéder aux paramètres.
               </p>
             </div>
           </div>
@@ -744,14 +744,14 @@ function Parametres({ utilisateur }) {
           <div className="settings-breadcrumb">
             <span>GAIN OFFICE</span>
             <span>/</span>
-            <strong>ParamÃ¨tres</strong>
+            <strong>Paramètres</strong>
           </div>
 
-          <h1>ParamÃ¨tres</h1>
+          <h1>Paramètres</h1>
 
           <p>
-            GÃ©rez votre profil, votre sÃ©curitÃ© et
-            vos prÃ©fÃ©rences personnelles.
+            Gérez votre profil, votre sécurité et
+            vos préférences personnelles.
           </p>
 
         </div>
@@ -787,7 +787,7 @@ function Parametres({ utilisateur }) {
         <aside className="settings-sidebar">
 
           <div className="settings-sidebar-title">
-            PARAMÃˆTRES
+            PARAMÈTRES
           </div>
 
           <nav>
@@ -823,7 +823,7 @@ function Parametres({ utilisateur }) {
             className="settings-reset-button"
             onClick={reinitialiserParametres}
           >
-            RÃ©initialiser mes prÃ©fÃ©rences
+            Réinitialiser mes préférences
           </button>
 
         </aside>
@@ -843,8 +843,8 @@ function Parametres({ utilisateur }) {
                   <h2>Mon profil</h2>
 
                   <p>
-                    GÃ©rez les informations
-                    associÃ©es Ã  votre compte.
+                    Gérez les informations
+                    associées à votre compte.
                   </p>
                 </div>
 
@@ -935,7 +935,7 @@ function Parametres({ utilisateur }) {
                 <div className="settings-field">
 
                   <label>
-                    TÃ©lÃ©phone
+                    Téléphone
                   </label>
 
                   <input
@@ -994,11 +994,11 @@ function Parametres({ utilisateur }) {
                 </div>
 
                 <div>
-                  <h2>SÃ©curitÃ©</h2>
+                  <h2>Sécurité</h2>
 
                   <p>
-                    ProtÃ©gez votre compte et
-                    gÃ©rez votre mot de passe.
+                    Protégez votre compte et
+                    gérez votre mot de passe.
                   </p>
                 </div>
 
@@ -1011,13 +1011,13 @@ function Parametres({ utilisateur }) {
                 <div>
 
                   <strong>
-                    SÃ©curitÃ© du compte
+                    Sécurité du compte
                   </strong>
 
                   <p>
-                    Votre mot de passe doit Ãªtre
+                    Votre mot de passe doit être
                     suffisamment long et difficile
-                    Ã  deviner.
+                    à deviner.
                   </p>
 
                 </div>
@@ -1274,12 +1274,12 @@ function Parametres({ utilisateur }) {
 
                   <div>
                     <strong>
-                      Notifications des tÃ¢ches
+                      Notifications des tâches
                     </strong>
 
                     <span>
                       Recevoir les changements
-                      concernant vos tÃ¢ches.
+                      concernant vos tâches.
                     </span>
                   </div>
 
@@ -1312,8 +1312,8 @@ function Parametres({ utilisateur }) {
                     </strong>
 
                     <span>
-                      ÃŠtre informÃ© des nouvelles
-                      demandes et dÃ©cisions.
+                      Ître informé des nouvelles
+                      demandes et décisions.
                     </span>
                   </div>
 
@@ -1347,7 +1347,7 @@ function Parametres({ utilisateur }) {
 
                     <span>
                       Recevoir les notifications
-                      lorsqu'un message est reÃ§u.
+                      lorsqu'un message est reçu.
                     </span>
                   </div>
 
@@ -1382,7 +1382,7 @@ function Parametres({ utilisateur }) {
                   onClick={sauvegarderParametres}
                 >
                   <Save size={17} />
-                  Enregistrer les prÃ©fÃ©rences
+                  Enregistrer les préférences
                 </button>
 
               </div>
@@ -1400,10 +1400,10 @@ function Parametres({ utilisateur }) {
                 </div>
 
                 <div>
-                  <h2>PrÃ©fÃ©rences</h2>
+                  <h2>Préférences</h2>
 
                   <p>
-                    Personnalisez vos prÃ©fÃ©rences
+                    Personnalisez vos préférences
                     personnelles dans GAIN OFFICE.
                   </p>
                 </div>
@@ -1427,8 +1427,8 @@ function Parametres({ utilisateur }) {
                       )
                     }
                   >
-                    <option value="FranÃ§ais">
-                      FranÃ§ais
+                    <option value="Français">
+                      Français
                     </option>
 
                     <option value="English">
@@ -1519,7 +1519,7 @@ function Parametres({ utilisateur }) {
                   onClick={sauvegarderParametres}
                 >
                   <Save size={17} />
-                  Enregistrer mes prÃ©fÃ©rences
+                  Enregistrer mes préférences
                 </button>
 
               </div>
@@ -1540,8 +1540,8 @@ function Parametres({ utilisateur }) {
                     <h2>Entreprise</h2>
 
                     <p>
-                      GÃ©rez les informations
-                      gÃ©nÃ©rales de Groupe GAIN SARL.
+                      Gérez les informations
+                      générales de Groupe GAIN SARL.
                     </p>
                   </div>
 
@@ -1590,7 +1590,7 @@ function Parametres({ utilisateur }) {
                   <div className="settings-field">
 
                     <label>
-                      TÃ©lÃ©phone
+                      Téléphone
                     </label>
 
                     <input
@@ -1652,7 +1652,7 @@ function Parametres({ utilisateur }) {
             )}
 
             {/* ========================================================
-                RAPPORTS PÃ‰RIODIQUES
+                RAPPORTS PÉRIODIQUES
             ======================================================== */}
 
             {onglet === "entreprise" &&
@@ -1666,10 +1666,10 @@ function Parametres({ utilisateur }) {
                   </div>
 
                   <div>
-                    <h2>Rapports pÃ©riodiques</h2>
+                    <h2>Rapports périodiques</h2>
 
                     <p>
-                      PÃ©riodicitÃ©, Ã©chÃ©ances, rappels
+                      Périodicité, échéances, rappels
                       et circuit de validation des
                       rapports.
                     </p>
@@ -1682,7 +1682,7 @@ function Parametres({ utilisateur }) {
                   <div className="settings-field">
 
                     <label>
-                      PÃ©riodicitÃ© des rapports
+                      Périodicité des rapports
                     </label>
 
                     <select
@@ -1698,7 +1698,7 @@ function Parametres({ utilisateur }) {
                       }
                     >
                       <option value="">
-                        Non dÃ©finie (aucune imposÃ©e)
+                        Non définie (aucune imposée)
                       </option>
 
                       <option value="quotidienne">
@@ -1720,8 +1720,8 @@ function Parametres({ utilisateur }) {
                   <div className="settings-field">
 
                     <label>
-                      DÃ©lai de soumission (jours aprÃ¨s
-                      la fin de pÃ©riode)
+                      Délai de soumission (jours après
+                      la fin de période)
                     </label>
 
                     <input
@@ -1762,11 +1762,11 @@ function Parametres({ utilisateur }) {
                       }
                     >
                       <option value="1">
-                        1 â€” Superior direct uniquement
+                        1 "” Superior direct uniquement
                       </option>
 
                       <option value="2">
-                        2 â€” SupÃ©rieur direct + niveau suivant
+                        2 "” Supérieur direct + niveau suivant
                       </option>
 
                       <option value="3">
@@ -1780,7 +1780,7 @@ function Parametres({ utilisateur }) {
                   <div className="settings-field">
 
                     <label>
-                      Rappels d'Ã©chÃ©ance
+                      Rappels d'échéance
                     </label>
 
                     <label

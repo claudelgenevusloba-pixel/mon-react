@@ -23,7 +23,7 @@ function Login({ onConnexion }) {
   const [voirMotDePasse, setVoirMotDePasse] = useState(false);
   const [chargement, setChargement] = useState(false);
   const [erreur, setErreur] = useState("");
-
+//  const [texte, setTexte] = useState({})
   /**
    * =========================================================
    * CONNEXION
@@ -53,7 +53,7 @@ function Login({ onConnexion }) {
 
     try {
       const response = await fetch(
-        `${API_URL}/auth/login`,
+        `http://127.0.0.1:8000/api/auth/login`,
         {
           method: "POST",
 
