@@ -23,7 +23,7 @@ import {
 import { PERMISSIONS } from "../config/permissions";
 import { aPermission } from "../config/access";
 
-import "./Header.css";
+import "../styles/components/header.css";
 
 import { API_URL } from "../config/api";
 

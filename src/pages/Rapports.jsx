@@ -13,7 +13,7 @@ import {
   UserPlus,
 } from "lucide-react";
 
-import "./Rapports.css";
+import "../styles/pages/rapports.css";
 
 import { PERMISSIONS } from "../config/permissions";
 import {

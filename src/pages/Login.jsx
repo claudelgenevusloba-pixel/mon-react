@@ -13,7 +13,7 @@ import {
   LogIn,
 } from "lucide-react";
 
-import "./Login.css";
+import "../styles/pages/login.css";
 
 import { API_URL } from "../config/api";
 

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 
 import { ArrowLeft, Mail, Send } from "lucide-react";
 
-import "./Login.css";
+import "../styles/pages/login.css";
 
 import { API_URL } from "../config/api";
 

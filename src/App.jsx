@@ -33,7 +33,7 @@ import {
 
 import { PERMISSIONS } from "./config/permissions";
 
-import "./App.css";
+import "./styles/app.css";
 
 import { API_URL } from "./config/api";
 

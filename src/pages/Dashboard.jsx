@@ -30,7 +30,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-import "./Dashboard.css";
+import "../styles/pages/dashboard.css";
 
 import { API_URL } from "../config/api";
 

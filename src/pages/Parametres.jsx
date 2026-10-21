@@ -19,7 +19,7 @@ import { aPermission, getRole } from "../config/access";
 import { ROLES } from "../config/roles";
 import { useAuth } from "../context/AuthContext";
 
-import "./Parametres.css";
+import "../styles/pages/parametres.css";
 
 import { API_URL } from "../config/api";
 

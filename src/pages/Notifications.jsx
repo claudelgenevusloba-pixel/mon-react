@@ -17,7 +17,7 @@ import {
   Clock3,
 } from "lucide-react";
 
-import "./Notifications.css";
+import "../styles/pages/notifications.css";
 
 import { PERMISSIONS } from "../config/permissions";
 import { aPermission, getRole } from "../config/access";

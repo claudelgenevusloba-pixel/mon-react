@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { CheckCircle2, LoaderCircle, LockKeyhole, ShieldAlert } from "lucide-react";
-import "./ActivationCompte.css";
+import "../styles/pages/activation-compte.css";
 import { API_URL } from "../config/api";
 
 export default function ActivationCompte() {

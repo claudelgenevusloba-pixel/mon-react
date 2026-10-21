@@ -7,7 +7,7 @@ import {
 } from "lucide-react"
 import { PERMISSIONS } from "../config/permissions"
 import { aPermission } from "../config/access"
-import "./Taches.css"
+import "../styles/pages/taches.css"
 
 const STATUTS = ["À faire", "En cours", "En attente de validation", "Validée", "Correction demandée"]
 const PRIORITES = ["Basse", "Normale", "Haute", "Urgente"]

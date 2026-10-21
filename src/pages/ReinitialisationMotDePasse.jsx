@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { ArrowLeft, KeyRound, Save } from "lucide-react";
-import "./Login.css";
+import "../styles/pages/login.css";
 import { API_URL } from "../config/api";
 
 /**

@@ -22,7 +22,7 @@ import {
 } from "../config/access"
 import { ROLES } from "../config/roles"
 
-import "./Demandes.css"
+import "../styles/pages/demandes.css"
 
 
 const demandesInitiales = [

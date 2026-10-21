@@ -14,7 +14,7 @@ import { NavLink } from "react-router-dom";
 import { PERMISSIONS } from "../config/permissions";
 import { aPermission } from "../config/access";
 
-import "./Sidebar.css";
+import "../styles/components/sidebar.css";
 
 function Sidebar({ utilisateur, onDeconnexion }) {
   const nomEntreprise = "Groupe GAIN SARL";

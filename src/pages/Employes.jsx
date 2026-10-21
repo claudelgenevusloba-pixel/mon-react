@@ -32,7 +32,7 @@ import {
   QrCode,
 } from "lucide-react";
 
-import "./Employes.css";
+import "../styles/pages/employes.css";
 
 import { PERMISSIONS } from "../config/permissions";
 import { aPermission } from "../config/access";
