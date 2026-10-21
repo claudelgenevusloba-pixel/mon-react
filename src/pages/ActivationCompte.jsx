@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { CheckCircle2, LoaderCircle, LockKeyhole, ShieldAlert } from "lucide-react";
 import "../styles/pages/activation-compte.css";
 import { API_URL } from "../config/api";
+import api from "../config/apiClient";
 
 export default function ActivationCompte() {
   const navigate = useNavigate();
@@ -39,14 +40,17 @@ export default function ActivationCompte() {
 
   const verifierInvitation = useCallback(async (signal) => {
     try {
-      const response = await fetch(
-        `${API_URL}/invitations/${encodeURIComponent(token)}`,
-        { headers: { Accept: "application/json" }, signal }
+      const response = await api.get(
+        `/invitations/${encodeURIComponent(token)}`,
+        {
+          headers: { Accept: "application/json" },
+          signal,
+        }
       );
 
-      const resultat = await response.json().catch(() => ({}));
+      const resultat = response.data || {};
 
-      if (!response.ok) {
+      if (response.status < 200 || response.status >= 300) {
         throw new Error(
           resultat.message || "Cette invitation n'est plus valide."
         );
@@ -68,12 +72,16 @@ export default function ActivationCompte() {
       setAdresse(resultat.data?.adresse || "");
       setVille(resultat.data?.ville || "");
     } catch (error) {
-      if (error.name === "AbortError") return;
-      setErreur(
-        error instanceof TypeError
-          ? "Impossible de joindre le serveur. Vérifiez que l'API est accessible et que CORS autorise ce site."
-          : error.message || "Impossible de vérifier l'invitation."
-      );
+      if (error.name === "AbortError" || error.code === "ERR_CANCELED") return;
+
+      const resultat = error?.response?.data || {};
+
+      const message =
+        error?.response
+          ? resultat.message || "Cette invitation n'est plus valide."
+          : "Impossible de joindre le serveur. Vérifiez que l'API est accessible et que CORS autorise ce site.";
+
+      setErreur(message);
     } finally {
       if (!signal.aborted) setChargement(false);
     }
@@ -127,37 +135,18 @@ export default function ActivationCompte() {
     setActivation(true);
 
     try {
-      const response = await fetch(
-        `${API_URL}/invitations/activate`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          body: JSON.stringify({
-            token,
-            password: motDePasse,
-            password_confirmation: confirmation,
-            email_personnel: emailPersonnel.trim().toLowerCase(),
-            telephone: telephone.trim() || null,
-            date_naissance: dateNaissance || null,
-            adresse: adresse.trim() || null,
-            ville: ville.trim() || null,
-          }),
-        }
-      );
+      const response = await api.post("/invitations/activate", {
+        token,
+        password: motDePasse,
+        password_confirmation: confirmation,
+        email_personnel: emailPersonnel.trim().toLowerCase(),
+        telephone: telephone.trim() || null,
+        date_naissance: dateNaissance || null,
+        adresse: adresse.trim() || null,
+        ville: ville.trim() || null,
+      });
 
-      const resultat = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        const premiereErreur = Object.values(resultat.errors || {})
-          .flat()
-          .find(Boolean);
-        throw new Error(
-          premiereErreur || resultat.message || "Impossible d'activer le compte."
-        );
-      }
+      const resultat = response.data || {};
 
       if (resultat.data?.statut !== "actif") {
         throw new Error("Le serveur n'a pas confirmé l'activation du compte.");
@@ -165,10 +154,16 @@ export default function ActivationCompte() {
 
       setSucces(true);
     } catch (error) {
+      const resultat = error?.response?.data || {};
+
+      const premiereErreur = Object.values(resultat.errors || {})
+        .flat()
+        .find(Boolean);
+
       setErreur(
-        error instanceof TypeError
-          ? "Impossible de joindre le serveur. Vérifiez votre connexion et la configuration CORS."
-          : error.message || "Une erreur est survenue."
+        error?.response
+          ? premiereErreur || resultat.message || "Impossible d'activer le compte."
+          : "Impossible de joindre le serveur. Vérifiez votre connexion et la configuration CORS."
       );
     } finally {
       setActivation(false);

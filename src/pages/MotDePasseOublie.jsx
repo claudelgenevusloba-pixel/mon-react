@@ -5,6 +5,7 @@ import { ArrowLeft, Mail, Send } from "lucide-react";
 import "../styles/pages/login.css";
 
 import { API_URL } from "../config/api";
+import api from "../config/apiClient";
 
 /**
  * Page « Mot de passe oublié » :
@@ -31,33 +32,11 @@ function MotDePasseOublie() {
     setMessage(null);
 
     try {
-      const reponse = await fetch(
-        `${API_URL}/mot-de-passe-oublie`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          body: JSON.stringify({
-            email: email.trim(),
-          }),
-        }
-      );
+      const response = await api.post("/mot-de-passe-oublie", {
+        email: email.trim(),
+      });
 
-      const data = await reponse
-        .json()
-        .catch(() => ({}));
-
-      if (!reponse.ok) {
-        setMessage({
-          type: "erreur",
-          texte:
-            data.message ||
-            "Une erreur est survenue. Réessayez.",
-        });
-        return;
-      }
+      const data = response.data || {};
 
       setMessage({
         type: "succes",
@@ -66,11 +45,13 @@ function MotDePasseOublie() {
           "Demande enregistrée.",
       });
       setEmail("");
-    } catch {
+    } catch (error) {
+      const data = error?.response?.data || {};
       setMessage({
         type: "erreur",
         texte:
-          "Impossible de joindre le serveur. Vérifiez votre connexion.",
+          data.message ||
+          "Une erreur est survenue. Réessayez.",
       });
     } finally {
       setChargement(false);

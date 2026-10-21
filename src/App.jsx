@@ -15,6 +15,7 @@ import { AuthProvider } from "./context/AuthContext";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Employes from "./pages/Employes";
+import DataTable from "./pages/DataTable";
 import Taches from "./pages/Taches";
 import Demandes from "./pages/Demandes";
 import Notifications from "./pages/Notifications";
@@ -214,28 +215,9 @@ function App() {
 
       try {
 
-        const response =
-          await fetch(
-            `${API_URL}/auth/me`,
-            {
-              headers: {
-                Accept:
-                  "application/json",
+        const response = await api.get("/auth/me");
 
-                Authorization:
-                  `Bearer ${token}`,
-              },
-            }
-          );
-
-        if (!response.ok) {
-          throw new Error(
-            "Session invalide"
-          );
-        }
-
-        const data =
-          await response.json();
+        const data = response.data || {};
 
         const utilisateurAPI =
           data.utilisateur ||
@@ -695,6 +677,30 @@ function App() {
                         }
                       >
                         <Employes
+                          utilisateur={
+                            utilisateur
+                          }
+                        />
+                      </RoutePermission>
+                    }
+                  />
+
+                  {/* =========================================
+                      DATA TABLE
+                  ========================================= */}
+
+                  <Route
+                    path="/data-table"
+                    element={
+                      <RoutePermission
+                        utilisateur={
+                          utilisateur
+                        }
+                        permission={
+                          PERMISSIONS.VOIR_EMPLOYES
+                        }
+                      >
+                        <DataTable
                           utilisateur={
                             utilisateur
                           }

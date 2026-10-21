@@ -23,6 +23,7 @@ import {
 import { ROLES } from "../config/roles";
 
 import { API_URL } from "../config/api";
+import apiClient from "../config/apiClient";
 
 function Rapports({ utilisateur }) {
 
@@ -133,24 +134,9 @@ function Rapports({ utilisateur }) {
 
     try {
 
-      const response = await fetch(
-        `${API_URL}/rapports-taches`,
-        {
-          headers: {
-            Accept: "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await apiClient.get("/rapports-taches");
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data.message ||
-            "Impossible de récupérer les rapports."
-        );
-      }
+      const data = response.data || {};
 
       const liste =
         data.rapports ||
@@ -168,8 +154,11 @@ function Rapports({ utilisateur }) {
 
       console.error(error);
 
+      const data = error?.response?.data;
+
       setErreur(
-        error.message ||
+        data?.message ||
+          error.message ||
           "Erreur lors du chargement des rapports."
       );
 
@@ -209,25 +198,27 @@ function Rapports({ utilisateur }) {
       headers["Content-Type"] = "application/json";
     }
 
-    const response = await fetch(
-      `${API_URL}${endpoint}`,
-      { ...options, headers }
-    );
+    try {
+      const response = await apiClient.request({
+        url: endpoint,
+        method: (options.method || "GET").toLowerCase(),
+        headers,
+        data:
+          options.body && !(options.body instanceof FormData)
+            ? JSON.parse(options.body)
+            : options.body,
+      });
 
-    const data = await response
-      .json()
-      .catch(() => ({}));
-
-    if (!response.ok) {
+      return response.data || {};
+    } catch (error) {
+      const data = error?.response?.data || {};
       throw new Error(
         data.message ||
           "Erreur de communication avec le serveur."
       );
     }
 
-    return data;
   };
-
   /* ============================================================
      SOUMISSION D'UN RAPPORT PÉRIODIQUE
      ----------------------------------------------------------

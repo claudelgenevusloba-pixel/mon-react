@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { ArrowLeft, KeyRound, Save } from "lucide-react";
 import "../styles/pages/login.css";
 import { API_URL } from "../config/api";
+import api from "../config/apiClient";
 
 /**
  * Page « Réinitialisation du mot de passe » :
@@ -43,32 +44,14 @@ function ReinitialisationMotDePasse() {
     setMessage(null);
 
     try {
-      const reponse = await fetch(
-        `${API_URL}/mot-de-passe-reinitialise`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          body: JSON.stringify({
-            token,
-            email,
-            mot_de_passe: motDePasse,
-            mot_de_passe_confirmation: confirmation,
-          }),
-        }
-      );
+      const response = await api.post("/mot-de-passe-reinitialise", {
+        token,
+        email,
+        mot_de_passe: motDePasse,
+        mot_de_passe_confirmation: confirmation,
+      });
 
-      const data = await reponse.json().catch(() => ({}));
-
-      if (!reponse.ok) {
-        setMessage({
-          type: "erreur",
-          texte: data.message || "Le lien est invalide ou a expiré.",
-        });
-        return;
-      }
+      const data = response.data || {};
 
       setReussite(true);
       setMessage({
@@ -79,10 +62,12 @@ function ReinitialisationMotDePasse() {
       setTimeout(() => {
         window.location.href = "/login";
       }, 2500);
-    } catch {
+    } catch (error) {
+      const data = error?.response?.data || {};
       setMessage({
         type: "erreur",
-        texte: "Impossible de joindre le serveur. Vérifiez votre connexion.",
+        texte:
+          data.message || "Le lien est invalide ou a expiré.",
       });
     } finally {
       setChargement(false);

@@ -38,6 +38,7 @@ import { PERMISSIONS } from "../config/permissions";
 import { aPermission } from "../config/access";
 
 import { API_URL } from "../config/api";
+import apiClient from "../config/apiClient";
 
 /* ============================================================
    UTILITAIRES
@@ -561,49 +562,42 @@ export default function Employes({
         "application/json";
     }
 
-    const response =
-      await fetch(
-        `${API_URL}${endpoint}`,
-        {
-          ...options,
-          headers,
-        }
-      );
+    let response;
+    let data = {};
 
-    const data =
-      await response
-        .json()
-        .catch(() => ({}));
+    try {
+      response = await apiClient.request({
+        url: endpoint,
+        method: (options.method || "GET").toLowerCase(),
+        headers,
+        data:
+          options.body && !(options.body instanceof FormData)
+            ? JSON.parse(options.body)
+            : options.body,
+      });
 
-    if (!response.ok) {
+      data = response.data || {};
+    } catch (error) {
+      const errData = error?.response?.data || {};
+      data = errData;
+
       let message =
-        data?.message ||
+        errData?.message ||
         "Erreur de communication avec le serveur.";
 
-      if (data?.errors) {
-        const erreurs =
-          Object.entries(
-            data.errors
+      if (errData?.errors) {
+        const erreurs = Object.entries(errData.errors)
+          .map(([champ, messages]) =>
+            `${champ} : ${Array.isArray(messages) ? messages.join(", ") : messages}`
           )
-            .map(
-              ([champ, messages]) =>
-                `${champ} : ${
-                  Array.isArray(messages)
-                    ? messages.join(", ")
-                    : messages
-                }`
-            )
-            .join(" | ");
+          .join(" | ");
 
         if (erreurs) {
-          message +=
-            ` — ${erreurs}`;
+          message += ` — ${erreurs}`;
         }
       }
 
-      throw new Error(
-        message
-      );
+      throw new Error(message);
     }
 
     return data;

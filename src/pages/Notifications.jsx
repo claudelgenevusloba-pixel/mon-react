@@ -23,6 +23,7 @@ import { PERMISSIONS } from "../config/permissions";
 import { aPermission, getRole } from "../config/access";
 import { ROLES } from "../config/roles";
 import { API_URL } from "../config/api";
+import api from "../config/apiClient";
 
 
 function obtenirIcone(type) {
@@ -189,36 +190,34 @@ export default function Notifications({ utilisateur }) {
     endpoint = "",
     options = {}
   ) => {
+    const method = (options.method || "GET").toLowerCase();
     const headers = {
       Accept: "application/json",
       ...(options.headers || {}),
     };
 
-    if (tokenNotif) {
-      headers.Authorization = `Bearer ${tokenNotif}`;
-    }
-
     if (options.body) {
       headers["Content-Type"] = "application/json";
     }
 
-    const response = await fetch(
-      `${API_URL}/notifications${endpoint}`,
-      { ...options, headers }
-    );
+    try {
+      const response = await api.request({
+        url: `/notifications${endpoint}`,
+        method,
+        headers,
+        data: options.body
+          ? JSON.parse(options.body)
+          : undefined,
+      });
 
-    const data = await response
-      .json()
-      .catch(() => ({}));
-
-    if (!response.ok) {
+      return response.data || {};
+    } catch (error) {
+      const data = error?.response?.data || {};
       throw new Error(
         data.message ||
           "Erreur de communication avec le serveur."
       );
     }
-
-    return data;
   };
 
   const formaterNotification = (n) => ({

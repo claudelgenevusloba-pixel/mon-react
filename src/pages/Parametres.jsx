@@ -22,6 +22,7 @@ import { useAuth } from "../context/AuthContext";
 import "../styles/pages/parametres.css";
 
 import { API_URL } from "../config/api";
+import api from "../config/apiClient";
 
 const PARAMETRES_PAR_DEFAUT = {
   notificationsEmail: true,
@@ -292,33 +293,14 @@ function Parametres({ utilisateur }) {
     setChargementProfil(true);
 
     try {
-      const response = await fetch(
-        `${API_URL}/auth/profil`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            nom: profil.nom,
-            prenom: profil.prenom,
-            email: profil.email,
-            telephone: profil.telephone || null,
-          }),
-        }
-      );
+      const response = await api.put("/auth/profil", {
+        nom: profil.nom,
+        prenom: profil.prenom,
+        email: profil.email,
+        telephone: profil.telephone || null,
+      });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data?.message ||
-            data?.errors?.email?.[0] ||
-            "Impossible d'enregistrer le profil."
-        );
-      }
+      const data = response.data || {};
 
       // Mise à jour du contexte auth (localStorage + état React)
       // pour que le nouvel e-mail soit immédiatement visible partout.
@@ -348,8 +330,12 @@ function Parametres({ utilisateur }) {
     } catch (error) {
       console.error(error);
 
+      const data = error?.response?.data;
+
       afficherMessage(
-        error.message ||
+        data?.message ||
+          data?.errors?.email?.[0] ||
+          error?.message ||
           "Erreur lors de l'enregistrement du profil.",
         "error"
       );
@@ -377,19 +363,9 @@ function Parametres({ utilisateur }) {
       }
 
       try {
-        const response = await fetch(
-          `${API_URL}/parametres`,
-          {
-            headers: {
-              Accept: "application/json",
-              Authorization: `Bearer ${accessToken}`,
-            },
-          }
-        );
+        const response = await api.get("/parametres");
 
-        const data = await response
-          .json()
-          .catch(() => ({}));
+        const data = response.data || {};
 
         const params = data?.parametres;
 
@@ -474,59 +450,36 @@ function Parametres({ utilisateur }) {
       "";
 
     try {
-      const response = await fetch(
-        `${API_URL}/parametres`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({
-            /* Requis par l'API : on préserve la valeur en base */
-            nom_entreprise:
-              nomEntrepriseApi ||
-              entreprise.nom ||
-              "GAIN OFFICE",
+      const response = await api.put("/parametres", {
+        nom_entreprise:
+          nomEntrepriseApi ||
+          entreprise.nom ||
+          "GAIN OFFICE",
 
-            periodicite_rapports:
-              configRapports.periodicite_rapports ||
-              null,
+        periodicite_rapports:
+          configRapports.periodicite_rapports ||
+          null,
 
-            delai_soumission_rapports:
-              configRapports.delai_soumission_rapports ===
-                "" ||
-              configRapports.delai_soumission_rapports ===
-                null
-                ? null
-                : Number(
-                    configRapports.delai_soumission_rapports
-                  ),
-
-            rappels_rapports:
-              Boolean(
-                configRapports.rappels_rapports
+        delai_soumission_rapports:
+          configRapports.delai_soumission_rapports ===
+            "" ||
+          configRapports.delai_soumission_rapports ===
+            null
+            ? null
+            : Number(
+                configRapports.delai_soumission_rapports
               ),
 
-            niveaux_validation_rapports: Number(
-              configRapports.niveaux_validation_rapports ||
-                1
-            ),
-          }),
-        }
-      );
+        rappels_rapports:
+          Boolean(
+            configRapports.rappels_rapports
+          ),
 
-      const data = await response
-        .json()
-        .catch(() => ({}));
-
-      if (!response.ok) {
-        throw new Error(
-          data.message ||
-            "Impossible d'enregistrer la configuration des rapports."
-        );
-      }
+        niveaux_validation_rapports: Number(
+          configRapports.niveaux_validation_rapports ||
+            1
+        ),
+      });
 
       afficherMessage(
         "La configuration des rapports a été enregistrée."
@@ -534,8 +487,11 @@ function Parametres({ utilisateur }) {
     } catch (error) {
       console.error(error);
 
+      const data = error?.response?.data;
+
       afficherMessage(
-        error.message ||
+        data?.message ||
+          error?.message ||
           "Erreur lors de l'enregistrement de la configuration.",
         "error"
       );
@@ -591,38 +547,16 @@ function Parametres({ utilisateur }) {
     setChargementMotDePasse(true);
 
     try {
-      const response = await fetch(
-        `${API_URL}/auth/password`,
-        {
-          method: "PUT",
+      const response = await api.put("/auth/password", {
+        ancien_mot_de_passe:
+          motDePasse.ancien,
 
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+        nouveau_mot_de_passe:
+          motDePasse.nouveau,
 
-          body: JSON.stringify({
-            ancien_mot_de_passe:
-              motDePasse.ancien,
-
-            nouveau_mot_de_passe:
-              motDePasse.nouveau,
-
-            nouveau_mot_de_passe_confirmation:
-              motDePasse.confirmation,
-          }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data?.message ||
-            "Impossible de modifier le mot de passe."
-        );
-      }
+        nouveau_mot_de_passe_confirmation:
+          motDePasse.confirmation,
+      });
 
       setMotDePasse({
         ancien: "",
@@ -636,8 +570,11 @@ function Parametres({ utilisateur }) {
     } catch (error) {
       console.error(error);
 
+      const data = error?.response?.data;
+
       afficherMessage(
-        error.message ||
+        data?.message ||
+          error?.message ||
           "Erreur lors de la modification du mot de passe.",
         "error"
       );

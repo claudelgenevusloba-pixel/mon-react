@@ -8,6 +8,7 @@ import {
   Settings,
   LogOut,
   Building2,
+  Table2,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
@@ -34,6 +35,12 @@ function Sidebar({ utilisateur, onDeconnexion }) {
       to: "/employes",
       label: "Employés",
       icon: Users,
+      permission: PERMISSIONS.VOIR_EMPLOYES,
+    },
+    {
+      to: "/data-table",
+      label: "Tableau de données",
+      icon: Table2,
       permission: PERMISSIONS.VOIR_EMPLOYES,
     },
     {

@@ -33,6 +33,7 @@ import { useAuth } from "../context/AuthContext";
 import "../styles/pages/dashboard.css";
 
 import { API_URL } from "../config/api";
+import api from "../config/apiClient";
 
 /* ============================================================
    VALEURS PAR DÉFAUT
@@ -513,55 +514,9 @@ const peutNouvelleDemande =
       setError("");
 
       try {
-        const response = await fetch(
-          `${API_URL}/dashboard`,
-          {
-            method: "GET",
-            headers: {
-              Accept: "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await api.get("/dashboard");
 
-        const contentType =
-          response.headers.get(
-            "content-type"
-          ) || "";
-
-        if (!response.ok) {
-          let message =
-            `Erreur serveur (${response.status}).`;
-
-          if (
-            contentType.includes(
-              "application/json"
-            )
-          ) {
-            const body =
-              await response.json();
-
-            message =
-              body?.message ||
-              body?.error ||
-              message;
-          }
-
-          throw new Error(message);
-        }
-
-        if (
-          !contentType.includes(
-            "application/json"
-          )
-        ) {
-          throw new Error(
-            "Le serveur n'a pas renvoyé une réponse JSON valide."
-          );
-        }
-
-        const data =
-          await response.json();
+        const data = response.data || {};
 
         setDashboard({
           ...EMPTY_DASHBOARD,
@@ -602,8 +557,12 @@ const peutNouvelleDemande =
           err
         );
 
+        const data = err?.response?.data;
+
         setError(
-          err?.message ||
+          data?.message ||
+            data?.error ||
+            err?.message ||
             "Impossible de charger le tableau de bord."
         );
       } finally {
