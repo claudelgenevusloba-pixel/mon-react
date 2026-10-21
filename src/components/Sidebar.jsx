@@ -159,22 +159,6 @@ function Sidebar({ utilisateur, onDeconnexion }) {
         )}
 
 
-        {/* DÉCONNEXION */}
-
-        <button
-          type="button"
-          className="sidebar-link sidebar-logout"
-          onClick={onDeconnexion}
-        >
-          <LogOut
-            className="sidebar-link-icon"
-            size={19}
-            strokeWidth={2}
-          />
-
-          <span>Déconnexion</span>
-        </button>
-
       </div>
 
     </aside>

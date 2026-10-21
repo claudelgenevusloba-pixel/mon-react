@@ -36,6 +36,7 @@ import { PERMISSIONS } from "./config/permissions";
 import "./styles/app.css";
 
 import { API_URL } from "./config/api";
+import api from "./config/apiClient";
 
 /**
  * =========================================================
@@ -482,21 +483,7 @@ function App() {
       try {
 
         if (token) {
-
-          await fetch(
-            `${API_URL}/auth/logout`,
-            {
-              method: "POST",
-
-              headers: {
-                Accept:
-                  "application/json",
-
-                Authorization:
-                  `Bearer ${token}`,
-              },
-            }
-          );
+          await api.post("/auth/logout");
         }
 
       } catch (error) {

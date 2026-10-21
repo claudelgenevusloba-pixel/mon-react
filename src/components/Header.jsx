@@ -26,6 +26,7 @@ import { aPermission } from "../config/access";
 import "../styles/components/header.css";
 
 import { API_URL } from "../config/api";
+import api from "../config/apiClient";
 
 function Header({
   utilisateur,
@@ -51,6 +52,16 @@ function Header({
     notifications,
     setNotifications,
   ] = useState([]);
+
+  const [
+    chargementNotifications,
+    setChargementNotifications,
+  ] = useState(false);
+
+  const [
+    erreurNotifications,
+    setErreurNotifications,
+  ] = useState("");
 
   const [recherche, setRecherche] =
     useState("");
@@ -115,20 +126,19 @@ function Header({
       return;
     }
 
+    setChargementNotifications(true);
+    setErreurNotifications("");
+
     try {
-      const response = await fetch(
-        `${API_URL}/notifications`,
-        {
-          headers: {
-            Accept: "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      const response = await api.get(
+        "/notifications"
       );
 
-      if (!response.ok) return;
+      if (response.status < 200 || response.status >= 300) {
+        return;
+      }
 
-      const data = await response.json();
+      const data = response.data || {};
 
       const liste =
         data.notifications ||
@@ -142,43 +152,105 @@ function Header({
 
       setNotifications(tableau);
 
-      const nonLues = tableau.filter(
-        (notification) => {
-          if (
-            notification.lu === true ||
-            notification.lu === 1 ||
-            notification.est_lue === true ||
-            notification.est_lue === 1
-          ) {
-            return false;
+      if (typeof data.non_lues === "number") {
+        setNotificationsNonLues(data.non_lues);
+      } else {
+        const nonLues = tableau.filter(
+          (notification) => {
+            if (
+              notification.lu === true ||
+              notification.lu === 1 ||
+              notification.est_lue === true ||
+              notification.est_lue === 1
+            ) {
+              return false;
+            }
+
+            const statut = String(
+              notification.statut ||
+                notification.status ||
+                ""
+            ).toLowerCase();
+
+            if (
+              statut === "lu" ||
+              statut === "lue" ||
+              statut === "read" ||
+              statut === "traitee" ||
+              statut === "traitée"
+            ) {
+              return false;
+            }
+
+            return true;
           }
+        );
 
-          const statut = String(
-            notification.statut ||
-              notification.status ||
-              ""
-          ).toLowerCase();
-
-          if (
-            statut === "lu" ||
-            statut === "lue" ||
-            statut === "read" ||
-            statut === "traitee" ||
-            statut === "traitée"
-          ) {
-            return false;
-          }
-
-          return true;
-        }
-      );
-
-      setNotificationsNonLues(
-        nonLues.length
-      );
+        setNotificationsNonLues(nonLues.length);
+      }
     } catch (error) {
       console.error(
         "Erreur récupération notifications :",
+        error
+      );
+
+      setErreurNotifications(
+        error?.response?.data?.message ||
+          "Impossible de récupérer les notifications."
+      );
+    } finally {
+      setChargementNotifications(false);
+    }
+  };
+
+  const marquerNotificationLue = async (id) => {
+    if (!token || !peutVoirNotifications) return;
+
+    try {
+      await api.put(`/notifications/${id}`);
+      await lireNotifications();
+      window.dispatchEvent(
+        new Event("gain-office-notifications-updated")
+      );
+    } catch (error) {
+      console.error(
+        "Erreur marquage notification :",
+        error
+      );
+    }
+  };
+
+  const naviguerNotification = (notification) => {
+    const id =
+      notification.id_notification ||
+      notification.id;
+
+    if (id && !notification.lu) {
+      marquerNotificationLue(id);
+    }
+
+    const lien = notification.lien;
+
+    setNotificationsOuvertes(false);
+
+    if (lien) {
+      navigate(lien);
+    } else {
+      navigate("/notifications");
+    }
+  };
+  const marquerToutesLues = async () => {
+
+    if (!token || !peutVoirNotifications) return;
+    try {
+      await api.post("/notifications/read-all");
+      await lireNotifications();
+      window.dispatchEvent(
+        new Event("gain-office-notifications-updated")
+      );
+    } catch (error) {
+      console.error(
+        "Erreur marquage toutes notifications :",
         error
       );
     }
@@ -506,6 +578,16 @@ function Header({
                     </span>
                   </div>
 
+                  {notificationsNonLues > 0 && (
+                    <button
+                      type="button"
+                      className="notifications-mark-all"
+                      onClick={marquerToutesLues}
+                    >
+                      Tout marquer comme lu
+                    </button>
+                  )}
+
                   <button
                     type="button"
                     className="notifications-close-button"
@@ -521,8 +603,17 @@ function Header({
 
                 <div className="notifications-list">
 
-                  {notifications.length ===
-                  0 ? (
+                  {chargementNotifications ? (
+                    <div className="notifications-empty">
+                      <Bell size={28} />
+                      <p>Chargement...</p>
+                    </div>
+                  ) : erreurNotifications ? (
+                    <div className="notifications-empty">
+                      <Bell size={28} />
+                      <p>{erreurNotifications}</p>
+                    </div>
+                  ) : notifications.length === 0 ? (
                     <div className="notifications-empty">
 
                       <Bell size={28} />
@@ -548,8 +639,10 @@ function Header({
                               notification.id ||
                               index
                             }
-                            onClick={
-                              allerNotifications
+                            onClick={() =>
+                              naviguerNotification(
+                                notification
+                              )
                             }
                           >
 

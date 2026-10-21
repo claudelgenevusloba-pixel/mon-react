@@ -16,6 +16,7 @@ import {
 import "../styles/pages/login.css";
 
 import { API_URL } from "../config/api";
+import api from "../config/apiClient";
 
 function Login({ onConnexion }) {
   const [email, setEmail] = useState("");
@@ -52,34 +53,14 @@ function Login({ onConnexion }) {
     setChargement(true);
 
     try {
-      const response = await fetch(
-        `http://127.0.0.1:8000/api/auth/login`,
-        {
-          method: "POST",
+      const response = await api.post("/auth/login", {
+        email: email.trim(),
+        mot_de_passe: motDePasse,
+      });
 
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-          },
+      const data = response.data || {};
 
-          body: JSON.stringify({
-            email: email.trim(),
-            mot_de_passe: motDePasse,
-          }),
-        }
-      );
-
-      let data = {};
-
-      try {
-        data = await response.json();
-      } catch {
-        throw new Error(
-          "Le serveur a retourné une réponse invalide."
-        );
-      }
-
-      if (!response.ok || data.success === false) {
+      if (data.success === false) {
         throw new Error(
           data.message ||
             "Adresse e-mail ou mot de passe incorrect."
@@ -161,8 +142,12 @@ function Login({ onConnexion }) {
         error
       );
 
+      const messageAxios =
+        error?.response?.data?.message ||
+        error?.message;
+
       setErreur(
-        error.message ||
+        messageAxios ||
           "Impossible de se connecter au serveur."
       );
 
