@@ -335,7 +335,7 @@ const translations = {
     "Supérieur hiérarchique": "Supervisor",
     "Aucun (à définir plus tard)": "None (set later)",
     "Date d'embauche": "Hire date",
-    "Après la création du compte, le lien d'activation sera généré et WhatsApp s'ouvrira avec un message prêt à être envoyé au numéro renseigné.": "After the account is created, an activation link will be generated and WhatsApp will open with a message ready to send to the provided number.",
+    "L’invitation sera envoyée automatiquement par e-mail à l’adresse renseignée. Après la création, vous pourrez aussi partager le lien d’activation par QR code ou WhatsApp.": "The invitation will be sent automatically by email to the address provided. After the account is created, you can also share the activation link by QR code or WhatsApp.",
     "Profil employé": "Employee profile",
     "Informations du collaborateur.": "Employee information.",
     "Copier": "Copy",

@@ -3152,7 +3152,7 @@ const renvoyerInvitation = async (employe) => {
                   <Send size={17} />
 
                   <span>
-                    {t("Après la création du compte, le lien d'activation sera généré et WhatsApp s'ouvrira avec un message prêt à être envoyé au numéro renseigné.")}
+                    {t("L’invitation sera envoyée automatiquement par e-mail à l’adresse renseignée. Après la création, vous pourrez aussi partager le lien d’activation par QR code ou WhatsApp.")}
                   </span>
 
                 </div>
