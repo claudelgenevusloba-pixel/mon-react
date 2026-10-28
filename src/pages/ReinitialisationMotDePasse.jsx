@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useLanguage } from "../context/LanguageContext";
 import { ArrowLeft, KeyRound, Save } from "lucide-react";
 import "../styles/pages/login.css";
 import { API_URL } from "../config/api";
@@ -9,6 +10,7 @@ import api from "../config/apiClient";
  * ouverte depuis l'e-mail (token + email dans l'URL).
  */
 function ReinitialisationMotDePasse() {
+  const { t } = useLanguage();
   const params = new URLSearchParams(window.location.search);
   const token = params.get("token") || "";
   const email = params.get("email") || "";
@@ -116,7 +118,7 @@ function ReinitialisationMotDePasse() {
   const renduFormulaire = () => (
     <form className="login-form" onSubmit={gererEnvoi}>
       <div className="login-field">
-        <label htmlFor="email">Adresse e-mail</label>
+        <label htmlFor="email">{t("Adresse e-mail")}</label>
         <div className="login-input-wrapper">
           <KeyRound className="login-input-icon" size={18} />
           <input
@@ -171,15 +173,14 @@ function ReinitialisationMotDePasse() {
         <section className="login-right">
           <div className="login-card">
             <div className="login-card-header">
-              <span className="login-welcome">GAIN OFFICE</span>
-              <h2>Nouveau mot de passe</h2>
-              <p>Choisissez un nouveau mot de passe pour votre compte.</p>
+              <span className="login-welcome">{t("GAIN OFFICE")}</span>
+              <h2>{t("Nouveau mot de passe")}</h2>
+              <p>{t("Choisissez un nouveau mot de passe pour votre compte.")}</p>
             </div>
 
             {lienInvalide ? (
               <div className="login-error">
-                Lien de réinitialisation invalide. Veuillez utiliser le lien
-                reçu par e-mail.
+                {t("Lien de réinitialisation invalide. Veuillez utiliser le lien reçu par e-mail.")}
               </div>
             ) : (
               renduFormulaire()
@@ -187,7 +188,7 @@ function ReinitialisationMotDePasse() {
 
             <a href="/login" style={styleLien}>
               <ArrowLeft size={14} />
-              Retour à la connexion
+              {t("Retour à la connexion")}
             </a>
           </div>
         </section>

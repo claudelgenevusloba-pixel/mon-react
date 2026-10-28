@@ -1,5 +1,6 @@
 import React, {
   createContext,
+  useEffect,
   useContext,
   useMemo,
   useState,
@@ -58,6 +59,26 @@ export function AuthProvider({ children }) {
   ] = useState(
     lireUtilisateurStocke
   );
+
+  useEffect(() => {
+    const gererSessionExpiree = () => {
+      setUtilisateurState(null);
+      localStorage.removeItem("gain_office_user");
+      localStorage.removeItem("user");
+    };
+
+    window.addEventListener(
+      "gain-office:session-expired",
+      gererSessionExpiree
+    );
+
+    return () => {
+      window.removeEventListener(
+        "gain-office:session-expired",
+        gererSessionExpiree
+      );
+    };
+  }, []);
 
   /**
    * =======================================================

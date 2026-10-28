@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useLanguage } from "../context/LanguageContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { CheckCircle2, LoaderCircle, LockKeyhole, ShieldAlert } from "lucide-react";
 import "../styles/pages/activation-compte.css";
@@ -6,6 +7,7 @@ import { API_URL } from "../config/api";
 import api from "../config/apiClient";
 
 export default function ActivationCompte() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -176,11 +178,10 @@ export default function ActivationCompte() {
         <div className="activation-card activation-loading">
           <LoaderCircle className="activation-spinner" size={42} />
 
-          <h2>Vérification de votre invitation...</h2>
+          <h2>{t("Vérification de votre invitation...")}</h2>
 
           <p>
-            Veuillez patienter pendant que nous vérifions votre
-            lien d'activation.
+            {t("Veuillez patienter pendant que nous vérifions votre lien d'activation.")}
           </p>
         </div>
       </div>
@@ -195,7 +196,7 @@ export default function ActivationCompte() {
             <ShieldAlert size={42} />
           </div>
 
-          <h1>Activation indisponible</h1>
+          <h1>{t("Activation indisponible")}</h1>
 
           <p className="activation-description">
             {erreur}
@@ -206,7 +207,7 @@ export default function ActivationCompte() {
             className="activation-button"
             onClick={() => navigate("/login")}
           >
-            Aller à la connexion
+            {t("Aller à la connexion")}
           </button>
         </div>
       </div>
@@ -221,14 +222,14 @@ export default function ActivationCompte() {
             <CheckCircle2 size={46} />
           </div>
 
-          <h1>Compte activé !</h1>
+          <h1>{t("Compte activé !")}</h1>
 
           <p className="activation-description">
-            Votre compte GAIN OFFICE a été activé avec succès.
+            {t("Votre compte GAIN OFFICE a été activé avec succès.")}
           </p>
 
           <p className="activation-email">
-            Vous pouvez maintenant vous connecter avec :
+            {t("Vous pouvez maintenant vous connecter avec :")}
           </p>
 
           <strong className="activation-user-email">
@@ -240,7 +241,7 @@ export default function ActivationCompte() {
             className="activation-button"
             onClick={() => navigate("/login")}
           >
-            Se connecter
+            {t("Se connecter")}
           </button>
         </div>
       </div>
@@ -252,12 +253,12 @@ export default function ActivationCompte() {
       <div className="activation-card activation-form-card">
         <div className="activation-brand">
           <div className="activation-logo">
-            G
+            {t("G")}
           </div>
 
           <div>
-            <strong>GAIN OFFICE</strong>
-            <span>Gestion professionnelle</span>
+            <strong>{t("GAIN OFFICE")}</strong>
+            <span>{t("Gestion professionnelle")}</span>
           </div>
         </div>
 
@@ -265,10 +266,10 @@ export default function ActivationCompte() {
           <LockKeyhole size={40} />
         </div>
 
-        <h1>Activez votre compte</h1>
+        <h1>{t("Activez votre compte")}</h1>
 
         <p className="activation-description">
-          Bienvenue{" "}
+          {t("Bienvenue")}{" "}
           <strong>
             {invitation?.prenom} {invitation?.nom}
           </strong>
@@ -276,12 +277,11 @@ export default function ActivationCompte() {
         </p>
 
         <p className="activation-description">
-          Votre compte professionnel GAIN OFFICE a été créé par
-          l'administration.
+          {t("Votre compte professionnel GAIN OFFICE a été créé par l'administration.")}
         </p>
 
         <div className="activation-email-box">
-          <span>Adresse e-mail</span>
+          <span>{t("Adresse e-mail")}</span>
           <strong>{invitation?.email}</strong>
         </div>
 
@@ -294,7 +294,7 @@ export default function ActivationCompte() {
 
         <form onSubmit={activerCompte}>
           <div className="activation-field">
-            <label>E-mail personnel *</label>
+            <label>{t("E-mail personnel *")}</label>
 
             <input
               type="email"
@@ -302,13 +302,13 @@ export default function ActivationCompte() {
               onChange={(event) =>
                 setEmailPersonnel(event.target.value)
               }
-              placeholder="votre.adresse@personnelle.com"
+              placeholder={t("votre.adresse@personnelle.com")}
               required
             />
           </div>
 
           <div className="activation-field">
-            <label>Téléphone personnel</label>
+            <label>{t("Téléphone personnel")}</label>
 
             <input
               type="tel"
@@ -316,12 +316,12 @@ export default function ActivationCompte() {
               onChange={(event) =>
                 setTelephone(event.target.value)
               }
-              placeholder="+225 07 00 00 00 00"
+              placeholder={t("+225 07 00 00 00 00")}
             />
           </div>
 
           <div className="activation-field">
-            <label>Date de naissance</label>
+            <label>{t("Date de naissance")}</label>
 
             <input
               type="date"
@@ -333,7 +333,7 @@ export default function ActivationCompte() {
           </div>
 
           <div className="activation-field">
-            <label>Adresse</label>
+            <label>{t("Adresse")}</label>
 
             <input
               type="text"
@@ -341,12 +341,12 @@ export default function ActivationCompte() {
               onChange={(event) =>
                 setAdresse(event.target.value)
               }
-              placeholder="Quartier, ville..."
+              placeholder={t("Quartier, ville...")}
             />
           </div>
 
           <div className="activation-field">
-            <label>Ville</label>
+            <label>{t("Ville")}</label>
 
             <input
               type="text"
@@ -354,12 +354,12 @@ export default function ActivationCompte() {
               onChange={(event) =>
                 setVille(event.target.value)
               }
-              placeholder="Votre ville"
+              placeholder={t("Votre ville")}
             />
           </div>
 
           <div className="activation-field">
-            <label>Nouveau mot de passe</label>
+            <label>{t("Nouveau mot de passe")}</label>
 
             <input
               type="password"
@@ -367,14 +367,14 @@ export default function ActivationCompte() {
               onChange={(event) =>
                 setMotDePasse(event.target.value)
               }
-              placeholder="Minimum 8 caractères"
+              placeholder={t("Minimum 8 caractères")}
               minLength={8}
               required
             />
           </div>
 
           <div className="activation-field">
-            <label>Confirmer le mot de passe</label>
+            <label>{t("Confirmer le mot de passe")}</label>
 
             <input
               type="password"
@@ -382,7 +382,7 @@ export default function ActivationCompte() {
               onChange={(event) =>
                 setConfirmation(event.target.value)
               }
-              placeholder="Répétez votre mot de passe"
+              placeholder={t("Répétez votre mot de passe")}
               minLength={8}
               required
             />
@@ -399,12 +399,12 @@ export default function ActivationCompte() {
                   size={18}
                   className="activation-spinner-small"
                 />
-                Activation...
+                {t("Activation...")}
               </>
             ) : (
               <>
                 <CheckCircle2 size={18} />
-                Activer mon compte
+                {t("Activer mon compte")}
               </>
             )}
           </button>
@@ -414,8 +414,7 @@ export default function ActivationCompte() {
           <LockKeyhole size={16} />
 
           <span>
-            Votre mot de passe est sécurisé et ne sera jamais
-            transmis par WhatsApp.
+            {t("Votre mot de passe est sécurisé et ne sera jamais transmis par WhatsApp.")}
           </span>
         </div>
       </div>

@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useLanguage } from "../context/LanguageContext";
+import { formaterDateSelonPreference } from "../context/LanguageContext";
 import { createPortal } from "react-dom";
 import { QRCodeSVG } from "qrcode.react";
 
@@ -35,9 +37,9 @@ import {
 import "../styles/pages/employes.css";
 
 import { PERMISSIONS } from "../config/permissions";
-import { aPermission } from "../config/access";
+import { aPermission, getRole, normaliser } from "../config/access";
+import { ROLES } from "../config/roles";
 
-import { API_URL } from "../config/api";
 import apiClient from "../config/apiClient";
 
 /* ============================================================
@@ -84,7 +86,7 @@ function formatDate(date) {
     return date;
   }
 
-  return valeur.toLocaleDateString("fr-FR");
+  return formaterDateSelonPreference(valeur, "Non renseignée");
 }
 
 /* ============================================================
@@ -306,6 +308,7 @@ function Avatar({
 export default function Employes({
   utilisateur,
 }) {
+  const { t } = useLanguage();
   const [employes, setEmployes] =
     useState([]);
 
@@ -416,10 +419,9 @@ export default function Employes({
   ============================================================ */
 
   const peutVoirEmployes =
-    aPermission(
-      utilisateur,
-      PERMISSIONS.VOIR_EMPLOYES
-    );
+    [ROLES.ADMINISTRATEUR, ROLES.DIRECTEUR, ROLES.RH, ROLES.SOUS_DIRECTEUR]
+      .includes(getRole(utilisateur)) &&
+    aPermission(utilisateur, PERMISSIONS.VOIR_EMPLOYES);
 
   const peutCreerEmploye =
     aPermission(
@@ -438,17 +440,6 @@ export default function Employes({
       utilisateur,
       PERMISSIONS.SUPPRIMER_EMPLOYE
     );
-
-  /* ============================================================
-     TOKEN
-  ============================================================ */
-
-  const token = () =>
-    localStorage.getItem(
-      "gain_office_token"
-    ) ||
-    localStorage.getItem("token") ||
-    "";
 
   /* ============================================================
      TOAST
@@ -546,13 +537,6 @@ export default function Employes({
         "application/json",
       ...(options.headers || {}),
     };
-
-    const accessToken = token();
-
-    if (accessToken) {
-      headers.Authorization =
-        `Bearer ${accessToken}`;
-    }
 
     if (
       options.body &&
@@ -705,9 +689,9 @@ export default function Employes({
             : [];
 
         setEmployes(
-          listeEmployes.map(
-            normaliserEmploye
-          )
+          listeEmployes
+            .map(normaliserEmploye)
+            .filter((employe) => !["directeur", "sous-directeur", "sous directeur", "sous_directeur"].includes(normaliser(employe.role)))
         );
 
         setRolesAPI(
@@ -906,6 +890,7 @@ export default function Employes({
               element?.libelle
           )
         )
+        .filter((nomRole) => !["directeur", "sous-directeur", "sous directeur", "sous_directeur"].includes(normaliser(nomRole)))
         .filter(Boolean);
     }, [rolesAPI]);
 
@@ -1982,7 +1967,7 @@ const renvoyerInvitation = async (employe) => {
             >
               <Eye size={16} />
 
-              Voir le profil
+              {t("Voir le profil")}
             </button>
 
             {peutModifierEmploye && (
@@ -1996,7 +1981,7 @@ const renvoyerInvitation = async (employe) => {
               >
                 <Pencil size={16} />
 
-                Modifier
+                {t("Modifier")}
               </button>
             )}
 
@@ -2010,7 +1995,7 @@ const renvoyerInvitation = async (employe) => {
             >
               <Copy size={16} />
 
-              Copier l'e-mail
+              {t("Copier l'e-mail")}
             </button>
 
             {peutModifierEmploye && (
@@ -2027,7 +2012,7 @@ const renvoyerInvitation = async (employe) => {
                   <>
                     <XCircle size={16} />
 
-                    Désactiver
+                    {t("Désactiver")}
                   </>
                 ) : (
                   <>
@@ -2035,7 +2020,7 @@ const renvoyerInvitation = async (employe) => {
                       size={16}
                     />
 
-                    Activer
+                    {t("Activer")}
                   </>
                 )}
               </button>
@@ -2053,7 +2038,7 @@ const renvoyerInvitation = async (employe) => {
               >
                 <Send size={16} />
 
-                Renvoyer l'invitation
+                {t("Renvoyer l'invitation")}
               </button>
             )}
 
@@ -2069,7 +2054,7 @@ const renvoyerInvitation = async (employe) => {
               >
                 <Trash2 size={16} />
 
-                Désactiver
+                {t("Désactiver")}
               </button>
             )}
           </div>,
@@ -2088,10 +2073,7 @@ const renvoyerInvitation = async (employe) => {
           <AlertCircle size={20} />
 
           <span>
-            Vous n'avez pas
-            l'autorisation
-            d'accéder à la gestion
-            des employés.
+            {t("Vous n'avez pas l'autorisation d'accéder à la gestion des employés.")}
           </span>
         </div>
       </div>
@@ -2114,13 +2096,11 @@ const renvoyerInvitation = async (employe) => {
 
             <div>
               <h1>
-                Gestion des employés
+                {t("Gestion des employés")}
               </h1>
 
               <p>
-                Gérez les collaborateurs,
-                leurs accès et leurs
-                informations.
+                {t("Gérez les collaborateurs, leurs accès et leurs informations.")}
               </p>
             </div>
           </div>
@@ -2137,7 +2117,7 @@ const renvoyerInvitation = async (employe) => {
           >
             <UserPlus size={18} />
 
-            Inviter un employé
+            {t("Inviter un employé")}
           </button>
         )}
       </div>
@@ -2155,7 +2135,7 @@ const renvoyerInvitation = async (employe) => {
 
           <div>
             <span>
-              Total employés
+              {t("Total employés")}
             </span>
 
             <strong>
@@ -2171,7 +2151,7 @@ const renvoyerInvitation = async (employe) => {
 
           <div>
             <span>
-              Employés actifs
+              {t("Employés actifs")}
             </span>
 
             <strong>
@@ -2187,7 +2167,7 @@ const renvoyerInvitation = async (employe) => {
 
           <div>
             <span>
-              Invitations en attente
+              {t("Invitations en attente")}
             </span>
 
             <strong>
@@ -2203,7 +2183,7 @@ const renvoyerInvitation = async (employe) => {
 
           <div>
             <span>
-              Responsables
+              {t("Responsables")}
             </span>
 
             <strong>
@@ -2225,7 +2205,7 @@ const renvoyerInvitation = async (employe) => {
 
           <input
             type="text"
-            placeholder="Rechercher un employé..."
+            placeholder={t("Rechercher un employé...")}
             value={recherche}
             onChange={(event) => {
               setRecherche(
@@ -2277,7 +2257,7 @@ const renvoyerInvitation = async (employe) => {
             }}
           >
             <option value="Tous les rôles">
-              Tous les rôles
+              {t("Tous les rôles")}
             </option>
 
             {roles.map(
@@ -2307,15 +2287,15 @@ const renvoyerInvitation = async (employe) => {
             }}
           >
             <option value="Tous les statuts">
-              Tous les statuts
+              {t("Tous les statuts")}
             </option>
 
             <option value="Actif">
-              Actif
+              {t("Actif")}
             </option>
 
             <option value="Inactif">
-              Inactif
+              {t("Inactif")}
             </option>
           </select>
         </div>
@@ -2329,7 +2309,7 @@ const renvoyerInvitation = async (employe) => {
         >
           <RefreshCw size={16} />
 
-          Réinitialiser
+          {t("Réinitialiser")}
         </button>
 
       </div>
@@ -2344,7 +2324,7 @@ const renvoyerInvitation = async (employe) => {
           <AlertCircle size={18} />
 
           <span>
-            {erreur}
+            {t(erreur)}
           </span>
 
           <button
@@ -2353,7 +2333,7 @@ const renvoyerInvitation = async (employe) => {
               chargerDonnees
             }
           >
-            Réessayer
+            {t("Réessayer")}
           </button>
 
         </div>
@@ -2369,12 +2349,12 @@ const renvoyerInvitation = async (employe) => {
 
           <div>
             <h2>
-              Collaborateurs
+              {t("Collaborateurs")}
             </h2>
 
             <p>
               {employesFiltres.length}{" "}
-              résultat(s)
+              {t("résultat(s)")}
             </p>
           </div>
 
@@ -2389,7 +2369,7 @@ const renvoyerInvitation = async (employe) => {
             />
 
             <span>
-              Chargement des employés...
+              {t("Chargement des employés...")}
             </span>
 
           </div>
@@ -2401,12 +2381,11 @@ const renvoyerInvitation = async (employe) => {
             <Users size={38} />
 
             <h3>
-              Aucun employé trouvé
+              {t("Aucun employé trouvé")}
             </h3>
 
             <p>
-              Modifiez vos filtres ou
-              ajoutez un collaborateur.
+              {t("Modifiez vos filtres ou ajoutez un collaborateur.")}
             </p>
 
           </div>
@@ -2420,31 +2399,31 @@ const renvoyerInvitation = async (employe) => {
               <thead>
                 <tr>
                   <th>
-                    Employé
+                    {t("Employé")}
                   </th>
 
                   <th>
-                    Poste
+                    {t("Poste")}
                   </th>
 
                   <th>
-                    Service
+                    {t("Service")}
                   </th>
 
                   <th>
-                    Rôle
+                    {t("Rôle")}
                   </th>
 
                   <th>
-                    Statut
+                    {t("Statut")}
                   </th>
 
                   <th>
-                    Arrivée
+                    {t("Arrivée")}
                   </th>
 
                   <th>
-                    Actions
+                    {t("Actions")}
                   </th>
                 </tr>
               </thead>
@@ -2525,9 +2504,7 @@ const renvoyerInvitation = async (employe) => {
                             size={14}
                           />
 
-                          {
-                            employe.role
-                          }
+                          {t(employe.role)}
 
                         </span>
 
@@ -2555,9 +2532,7 @@ const renvoyerInvitation = async (employe) => {
                             />
                           )}
 
-                          {
-                            employe.statut
-                          }
+                          {t(employe.statut)}
 
                         </span>
 
@@ -2581,7 +2556,7 @@ const renvoyerInvitation = async (employe) => {
                           <button
                             type="button"
                             className="employee-action-view"
-                            title="Voir"
+                            title={t("Voir")}
                             onClick={() =>
                               ouvrirDetails(
                                 employe
@@ -2595,7 +2570,7 @@ const renvoyerInvitation = async (employe) => {
                             <button
                               type="button"
                               className="employee-action-edit"
-                              title="Modifier"
+                              title={t("Modifier")}
                               onClick={() =>
                                 ouvrirModification(
                                   employe
@@ -2611,7 +2586,7 @@ const renvoyerInvitation = async (employe) => {
                           <button
                             type="button"
                             className="employee-action-more employee-more-trigger"
-                            title="Plus"
+                            title={t("Plus")}
                             onClick={(event) =>
                               ouvrirMenu(
                                 event,
@@ -2651,7 +2626,7 @@ const renvoyerInvitation = async (employe) => {
 
             <span>
 
-              Affichage de{" "}
+              {t("Affichage de")}{" "}
 
               <strong>
                 {(pageActuelle - 1) *
@@ -2659,7 +2634,7 @@ const renvoyerInvitation = async (employe) => {
                   1}
               </strong>{" "}
 
-              à{" "}
+              {t("à")}{" "}
 
               <strong>
                 {Math.min(
@@ -2669,7 +2644,7 @@ const renvoyerInvitation = async (employe) => {
                 )}
               </strong>{" "}
 
-              sur{" "}
+              {t("sur")}{" "}
 
               <strong>
                 {employesFiltres.length}
@@ -2700,7 +2675,7 @@ const renvoyerInvitation = async (employe) => {
               </button>
 
               <span>
-                Page{" "}
+                {t("Page")}{" "}
                 {pageActuelle} /{" "}
                 {totalPages}
               </span>
@@ -2761,15 +2736,15 @@ const renvoyerInvitation = async (employe) => {
                 <h2>
                   {modal ===
                   "invitation"
-                    ? "Inviter un employé"
-                    : "Modifier l'employé"}
+                    ? t("Inviter un employé")
+                    : t("Modifier l'employé")}
                 </h2>
 
                 <p>
                   {modal ===
                   "invitation"
-                    ? "Créez le compte professionnel du collaborateur."
-                    : "Mettez à jour les informations du collaborateur."}
+                    ? t("Créez le compte professionnel du collaborateur.")
+                    : t("Mettez à jour les informations du collaborateur.")}
                 </p>
 
               </div>
@@ -2800,7 +2775,7 @@ const renvoyerInvitation = async (employe) => {
                 <label className="form-field">
 
                   <span>
-                    Prénom *
+                    {t("Prénom *")}
                   </span>
 
                   <input
@@ -2819,7 +2794,7 @@ const renvoyerInvitation = async (employe) => {
                 <label className="form-field">
 
                   <span>
-                    Nom *
+                    {t("Nom *")}
                   </span>
 
                   <input
@@ -2838,7 +2813,7 @@ const renvoyerInvitation = async (employe) => {
                 <label className="form-field">
 
                   <span>
-                    E-mail *
+                    {t("E-mail *")}
                   </span>
 
                   <input
@@ -2858,7 +2833,7 @@ const renvoyerInvitation = async (employe) => {
                 <label className="form-field">
 
                   <span>
-                    Téléphone / WhatsApp
+                    {t("Téléphone / WhatsApp")}
                   </span>
 
                   <input
@@ -2869,7 +2844,7 @@ const renvoyerInvitation = async (employe) => {
                     onChange={
                       gererChangement
                     }
-                    placeholder="07 00 00 00 00"
+                    placeholder={t("07 00 00 00 00")}
                     required={
                       modal ===
                       "invitation"
@@ -2881,7 +2856,7 @@ const renvoyerInvitation = async (employe) => {
                 <label className="form-field">
 
                   <span>
-                    Matricule *
+                    {t("Matricule *")}
                   </span>
 
                   <input
@@ -2900,7 +2875,7 @@ const renvoyerInvitation = async (employe) => {
                 <label className="form-field">
 
                   <span>
-                    Rôle *
+                    {t("Rôle *")}
                   </span>
 
                   <select
@@ -2914,7 +2889,7 @@ const renvoyerInvitation = async (employe) => {
                   >
 
                     <option value="">
-                      Sélectionner un rôle
+                      {t("Sélectionner un rôle")}
                     </option>
 
                     {rolesAPI.map(
@@ -2942,7 +2917,7 @@ const renvoyerInvitation = async (employe) => {
                 <label className="form-field">
 
                   <span>
-                    Service
+                    {t("Service")}
                   </span>
 
                   <select
@@ -2955,7 +2930,7 @@ const renvoyerInvitation = async (employe) => {
                   >
 
                     <option value="">
-                      Sélectionner
+                      {t("Sélectionner")}
                     </option>
 
                     {services.map(
@@ -2981,7 +2956,7 @@ const renvoyerInvitation = async (employe) => {
                 <label className="form-field">
 
                   <span>
-                    Poste *
+                    {t("Poste *")}
                   </span>
 
                   <select
@@ -2995,7 +2970,7 @@ const renvoyerInvitation = async (employe) => {
                   >
 
                     <option value="">
-                      Sélectionner
+                      {t("Sélectionner")}
                     </option>
 
                     {postesDisponibles.map(
@@ -3021,7 +2996,7 @@ const renvoyerInvitation = async (employe) => {
                 <label className="form-field">
 
                   <span>
-                    Supérieur hiérarchique
+                    {t("Supérieur hiérarchique")}
                   </span>
 
                   <select
@@ -3038,7 +3013,7 @@ const renvoyerInvitation = async (employe) => {
                   >
 
                     <option value="">
-                      Aucun (à définir plus tard)
+                      {t("Aucun (à définir plus tard)")}
                     </option>
 
                     {employes
@@ -3060,7 +3035,7 @@ const renvoyerInvitation = async (employe) => {
                           }
                         >
                           {candidat.nom} —{" "}
-                          {candidat.role}
+                          {t(candidat.role)}
                         </option>
                       ))}
 
@@ -3071,7 +3046,7 @@ const renvoyerInvitation = async (employe) => {
                 <label className="form-field">
 
                   <span>
-                    Date d'embauche
+                    {t("Date d'embauche")}
                   </span>
 
                   <input
@@ -3090,7 +3065,7 @@ const renvoyerInvitation = async (employe) => {
                 <label className="form-field">
 
                   <span>
-                    Date de naissance
+                    {t("Date de naissance")}
                   </span>
 
                   <input
@@ -3109,7 +3084,7 @@ const renvoyerInvitation = async (employe) => {
                 <label className="form-field">
 
                   <span>
-                    Ville
+                    {t("Ville")}
                   </span>
 
                   <input
@@ -3127,7 +3102,7 @@ const renvoyerInvitation = async (employe) => {
                 <label className="form-field">
 
                   <span>
-                    Adresse
+                    {t("Adresse")}
                   </span>
 
                   <input
@@ -3148,7 +3123,7 @@ const renvoyerInvitation = async (employe) => {
                   <label className="form-field">
 
                     <span>
-                      Nouveau mot de passe
+                      {t("Nouveau mot de passe")}
                     </span>
 
                     <input
@@ -3160,7 +3135,7 @@ const renvoyerInvitation = async (employe) => {
                       onChange={
                         gererChangement
                       }
-                      placeholder="Laisser vide pour conserver"
+                      placeholder={t("Laisser vide pour conserver")}
                     />
 
                   </label>
@@ -3177,13 +3152,7 @@ const renvoyerInvitation = async (employe) => {
                   <Send size={17} />
 
                   <span>
-                    Après la création du
-                    compte, le lien
-                    d'activation sera généré
-                    et WhatsApp s'ouvrira
-                    avec un message prêt à
-                    être envoyé au numéro
-                    renseigné.
+                    {t("Après la création du compte, le lien d'activation sera généré et WhatsApp s'ouvrira avec un message prêt à être envoyé au numéro renseigné.")}
                   </span>
 
                 </div>
@@ -3202,7 +3171,7 @@ const renvoyerInvitation = async (employe) => {
                     enregistrement
                   }
                 >
-                  Annuler
+                  {t("Annuler")}
                 </button>
 
                 <button
@@ -3224,8 +3193,8 @@ const renvoyerInvitation = async (employe) => {
 
                   {modal ===
                   "invitation"
-                    ? "Créer l'employé"
-                    : "Enregistrer"}
+                    ? t("Créer l'employé")
+                    : t("Enregistrer")}
 
                 </button>
 
@@ -3264,12 +3233,11 @@ const renvoyerInvitation = async (employe) => {
               <div>
 
                 <h2>
-                  Profil employé
+                  {t("Profil employé")}
                 </h2>
 
                 <p>
-                  Informations du
-                  collaborateur.
+                  {t("Informations du collaborateur.")}
                 </p>
 
               </div>
@@ -3326,7 +3294,7 @@ const renvoyerInvitation = async (employe) => {
                   <Mail size={17} />
 
                   <span>
-                    E-mail
+                    {t("E-mail")}
                   </span>
 
                   <strong>
@@ -3345,7 +3313,7 @@ const renvoyerInvitation = async (employe) => {
                   >
                     <Copy size={13} />
 
-                    Copier
+                    {t("Copier")}
                   </button>
 
                 </div>
@@ -3355,7 +3323,7 @@ const renvoyerInvitation = async (employe) => {
                   <Phone size={17} />
 
                   <span>
-                    Téléphone
+                    {t("Téléphone")}
                   </span>
 
                   <strong>
@@ -3373,7 +3341,7 @@ const renvoyerInvitation = async (employe) => {
                   />
 
                   <span>
-                    Service
+                    {t("Service")}
                   </span>
 
                   <strong>
@@ -3391,7 +3359,7 @@ const renvoyerInvitation = async (employe) => {
                   />
 
                   <span>
-                    Poste
+                    {t("Poste")}
                   </span>
 
                   <strong>
@@ -3409,7 +3377,7 @@ const renvoyerInvitation = async (employe) => {
                   />
 
                   <span>
-                    Matricule
+                    {t("Matricule")}
                   </span>
 
                   <strong>
@@ -3428,7 +3396,7 @@ const renvoyerInvitation = async (employe) => {
                   />
 
                   <span>
-                    Statut
+                    {t("Statut")}
                   </span>
 
                   <strong>
@@ -3444,7 +3412,7 @@ const renvoyerInvitation = async (employe) => {
                   <Clock3 size={17} />
 
                   <span>
-                    Date d'arrivée
+                    {t("Date d'arrivée")}
                   </span>
 
                   <strong>
@@ -3462,7 +3430,7 @@ const renvoyerInvitation = async (employe) => {
                   />
 
                   <span>
-                    Ville
+                    {t("Ville")}
                   </span>
 
                   <strong>
@@ -3487,7 +3455,7 @@ const renvoyerInvitation = async (employe) => {
                   fermerModal
                 }
               >
-                Fermer
+                {t("Fermer")}
               </button>
 
               {peutModifierEmploye && (
@@ -3503,7 +3471,7 @@ const renvoyerInvitation = async (employe) => {
                 >
                   <Pencil size={16} />
 
-                  Modifier
+                  {t("Modifier")}
                 </button>
 
               )}
@@ -3542,17 +3510,17 @@ const renvoyerInvitation = async (employe) => {
             </div>
 
             <h2>
-              Désactiver l'employé ?
+              {t("Désactiver l'employé ?")}
             </h2>
 
             <p>
-              Le compte de{" "}
+              {t("Le compte de")}{" "}
               <strong>
                 {
                   employeSelectionne.nom
                 }
               </strong>{" "}
-              sera désactivé.
+              {t("sera désactivé.")}
             </p>
 
             <div className="employee-modal-footer">
@@ -3567,7 +3535,7 @@ const renvoyerInvitation = async (employe) => {
                   enregistrement
                 }
               >
-                Annuler
+                {t("Annuler")}
               </button>
 
               <button
@@ -3590,7 +3558,7 @@ const renvoyerInvitation = async (employe) => {
                   <Trash2 size={17} />
                 )}
 
-                Désactiver
+                {t("Désactiver")}
 
               </button>
 
@@ -3624,7 +3592,7 @@ const renvoyerInvitation = async (employe) => {
 
               <div className="qr-modal-title">
                 <QrCode size={22} />
-                <h2>QR code d'inscription</h2>
+                <h2>{t("QR code d'inscription")}</h2>
               </div>
 
               <button
@@ -3654,15 +3622,14 @@ const renvoyerInvitation = async (employe) => {
                 <>
                   <AlertCircle size={17} />
                   <span>
-                    QR code expiré — demandez un nouveau
-                    via « Renvoyer l'invitation ».
+                    {t("QR code expiré — demandez un nouveau via « Renvoyer l'invitation ».")}
                   </span>
                 </>
               ) : (
                 <>
                   <Clock3 size={17} />
                   <span>
-                    Expire dans{" "}
+                    {t("Expire dans")}{" "}
                     <strong>{qrMinuteur}</strong>
                   </span>
                 </>
@@ -3680,11 +3647,7 @@ const renvoyerInvitation = async (employe) => {
             </div>
 
             <p className="qr-modal-aide">
-              L'employé scanne ce code avec son
-              téléphone, complète ses informations
-              personnelles et choisit son mot de
-              passe. Le QR code est utilisable une
-              seule fois.
+              {t("L'employé scanne ce code avec son téléphone, complète ses informations personnelles et choisit son mot de passe. Le QR code est utilisable une seule fois.")}
             </p>
 
             <div className="employee-modal-footer">
@@ -3711,7 +3674,7 @@ const renvoyerInvitation = async (employe) => {
                 }}
               >
                 <Copy size={16} />
-                Copier le lien
+                {t("Copier le lien")}
               </button>
 
               <button
@@ -3725,7 +3688,7 @@ const renvoyerInvitation = async (employe) => {
                 }}
               >
                 <Send size={16} />
-                Envoyer par WhatsApp
+                {t("Envoyer par WhatsApp")}
               </button>
 
               <button
@@ -3733,7 +3696,7 @@ const renvoyerInvitation = async (employe) => {
                 className="employees-primary-button"
                 onClick={() => setQr(null)}
               >
-                Fermer
+                {t("Fermer")}
               </button>
 
             </div>
@@ -3771,7 +3734,7 @@ const renvoyerInvitation = async (employe) => {
           )}
 
           <span>
-            {toast.message}
+            {t(toast.message)}
           </span>
 
         </div>

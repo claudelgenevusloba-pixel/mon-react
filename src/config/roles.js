@@ -12,6 +12,8 @@ export const ROLES = {
 
   DIRECTEUR: "Directeur",
 
+  SOUS_DIRECTEUR: "Sous-directeur",
+
   RH: "Ressources humaines",
 
   RESPONSABLE: "Responsable",
@@ -37,6 +39,7 @@ export const ROLE_PERMISSIONS = {
   [ROLES.DIRECTEUR]: [
 
     PERMISSIONS.VOIR_DASHBOARD,
+    PERMISSIONS.VOIR_HISTORIQUE,
 
     // Employés
     PERMISSIONS.VOIR_EMPLOYES,
@@ -121,9 +124,6 @@ export const ROLE_PERMISSIONS = {
 
     PERMISSIONS.VOIR_DASHBOARD,
 
-    // Employés
-    PERMISSIONS.VOIR_EMPLOYES,
-
     // Tâches
     PERMISSIONS.VOIR_TACHES,
     PERMISSIONS.CREER_TACHE,
@@ -155,6 +155,10 @@ export const ROLE_PERMISSIONS = {
     // Paramètres
     PERMISSIONS.VOIR_PARAMETRES,
   ],
+
+  // Le Sous-directeur dispose des permissions opérationnelles
+  // d'un responsable, notamment pour créer des demandes.
+  [ROLES.SOUS_DIRECTEUR]: [],
 
 
   // =======================================================
@@ -195,6 +199,11 @@ export const ROLE_PERMISSIONS = {
 
   [ROLES.ADMINISTRATEUR]: Object.values(PERMISSIONS),
 };
+
+ROLE_PERMISSIONS[ROLES.SOUS_DIRECTEUR] = [
+  ...ROLE_PERMISSIONS[ROLES.RESPONSABLE],
+  PERMISSIONS.VOIR_EMPLOYES,
+];
 
 
 export default ROLES;

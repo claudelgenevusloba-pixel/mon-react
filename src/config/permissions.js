@@ -27,6 +27,7 @@ export const PERMISSIONS = {
   // =======================================================
 
   VOIR_DASHBOARD: "voir_dashboard",
+  VOIR_HISTORIQUE: "voir_historique",
 
 
   // =======================================================

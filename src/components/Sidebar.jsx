@@ -4,20 +4,21 @@ import {
   Users,
   ClipboardList,
   FileText,
-  Bell,
   Settings,
   LogOut,
   Building2,
-  Table2,
+  History,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 import { PERMISSIONS } from "../config/permissions";
 import { aPermission } from "../config/access";
+import { useLanguage } from "../context/LanguageContext";
 
 import "../styles/components/sidebar.css";
 
 function Sidebar({ utilisateur, onDeconnexion }) {
+  const { t } = useLanguage();
   const nomEntreprise = "Groupe GAIN SARL";
 
   const peutVoir = (permission) => {
@@ -38,10 +39,16 @@ function Sidebar({ utilisateur, onDeconnexion }) {
       permission: PERMISSIONS.VOIR_EMPLOYES,
     },
     {
-      to: "/data-table",
-      label: "Tableau de données",
-      icon: Table2,
-      permission: PERMISSIONS.VOIR_EMPLOYES,
+      to: "/suivi-demandes",
+      label: "Suivi des demandes",
+      icon: FileText,
+      permission: PERMISSIONS.VOIR_DEMANDES,
+    },
+    {
+      to: "/historique",
+      label: "Historique des actions",
+      icon: History,
+      permission: PERMISSIONS.VOIR_HISTORIQUE,
     },
     {
       to: "/taches",
@@ -60,12 +67,6 @@ function Sidebar({ utilisateur, onDeconnexion }) {
       label: "Rapports",
       icon: FileText,
       permission: PERMISSIONS.VOIR_RAPPORTS,
-    },
-    {
-      to: "/notifications",
-      label: "Notifications",
-      icon: Bell,
-      permission: PERMISSIONS.VOIR_NOTIFICATIONS,
     },
   ];
 
@@ -102,13 +103,13 @@ function Sidebar({ utilisateur, onDeconnexion }) {
 
 
       {/* =====================================================
-          MENU PRINCIPAL
+          {t("MENU PRINCIPAL")}
       ===================================================== */}
 
       <nav className="sidebar-nav">
 
         <div className="sidebar-section-title">
-          MENU PRINCIPAL
+          {t("MENU PRINCIPAL")}
         </div>
 
         {liensAutorises.map((lien) => {
@@ -130,7 +131,7 @@ function Sidebar({ utilisateur, onDeconnexion }) {
                 strokeWidth={2}
               />
 
-              <span>{lien.label}</span>
+              <span>{t(lien.label)}</span>
             </NavLink>
           );
         })}
@@ -161,7 +162,7 @@ function Sidebar({ utilisateur, onDeconnexion }) {
               strokeWidth={2}
             />
 
-            <span>Paramètres</span>
+            <span>{t("Paramètres")}</span>
           </NavLink>
         )}
 

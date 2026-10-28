@@ -72,6 +72,14 @@ export const getRole = (utilisateur) => {
   }
 
   if (
+    role === "sous-directeur" ||
+    role === "sous directeur" ||
+    role === "sous_directeur"
+  ) {
+    return ROLES.SOUS_DIRECTEUR;
+  }
+
+  if (
     role === "ressources humaines" ||
     role === "ressources_humaines" ||
     role === "rh"

@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLanguage } from "../context/LanguageContext";
+import { formaterDateSelonPreference } from "../context/LanguageContext";
 
 import {
   FileText,
@@ -22,10 +24,10 @@ import {
 } from "../config/access";
 import { ROLES } from "../config/roles";
 
-import { API_URL } from "../config/api";
 import apiClient from "../config/apiClient";
 
 function Rapports({ utilisateur }) {
+  const { t } = useLanguage();
 
   const [rapports, setRapports] = useState([]);
   const [chargement, setChargement] = useState(true);
@@ -110,16 +112,6 @@ function Rapports({ utilisateur }) {
 
   const chargerRapports = async () => {
 
-    const token =
-      localStorage.getItem("gain_office_token") ||
-      localStorage.getItem("token");
-
-    if (!token) {
-      setErreur("Session utilisateur introuvable.");
-      setChargement(false);
-      return;
-    }
-
     if (!peutVoirRapports) {
       setRapports([]);
       setErreur(
@@ -181,15 +173,6 @@ function Rapports({ utilisateur }) {
       Accept: "application/json",
       ...(options.headers || {}),
     };
-
-    const accessToken =
-      localStorage.getItem("gain_office_token") ||
-      localStorage.getItem("token") ||
-      "";
-
-    if (accessToken) {
-      headers.Authorization = `Bearer ${accessToken}`;
-    }
 
     if (
       options.body &&
@@ -405,7 +388,7 @@ function Rapports({ utilisateur }) {
       return String(date);
     }
 
-    return valeur.toLocaleDateString("fr-FR");
+    return formaterDateSelonPreference(valeur);
   };
 
   /*
@@ -507,7 +490,7 @@ function Rapports({ utilisateur }) {
       return (
         <span className="rapport-status status-success">
           <CheckCircle2 size={14} />
-          Validé
+          {t("Validé")}
         </span>
       );
     }
@@ -518,7 +501,7 @@ function Rapports({ utilisateur }) {
       return (
         <span className="rapport-status status-waiting">
           <AlertCircle size={14} />
-          Refusé
+          {t("Refusé")}
         </span>
       );
     }
@@ -532,7 +515,7 @@ function Rapports({ utilisateur }) {
       return (
         <span className="rapport-status status-progress">
           <AlertCircle size={14} />
-          Correction demandée
+          {t("Correction demandée")}
         </span>
       );
     }
@@ -548,7 +531,7 @@ function Rapports({ utilisateur }) {
       return (
         <span className="rapport-status status-progress">
           <Clock3 size={14} />
-          En cours d'examen
+          {t("En cours d'examen")}
         </span>
       );
     }
@@ -556,7 +539,7 @@ function Rapports({ utilisateur }) {
     return (
       <span className="rapport-status status-waiting">
         <AlertCircle size={14} />
-        Soumis
+        {t("Soumis")}
       </span>
     );
   };
@@ -570,7 +553,7 @@ function Rapports({ utilisateur }) {
     return (
       <span className="rapport-status status-danger">
         <AlertCircle size={14} />
-        En retard
+        {t("En retard")}
       </span>
     );
   };
@@ -657,10 +640,10 @@ function Rapports({ utilisateur }) {
 
             <div>
 
-              <h1>Rapports</h1>
+              <h1>{t("Rapports")}</h1>
 
               <p>
-                Suivi et consultation des rapports de tâches
+                {t("Suivi et consultation des rapports de tâches")}
               </p>
 
             </div>
@@ -677,7 +660,7 @@ function Rapports({ utilisateur }) {
               onClick={() => setModalNouveau(true)}
             >
               <FileText size={17} />
-              Nouveau rapport
+              {t("Nouveau rapport")}
             </button>
           )}
 
@@ -696,7 +679,7 @@ function Rapports({ utilisateur }) {
               }
             />
 
-            Actualiser
+            {t("Actualiser")}
           </button>
         </div>
 
@@ -711,7 +694,7 @@ function Rapports({ utilisateur }) {
           </div>
 
           <div>
-            <span>Total rapports</span>
+            <span>{t("Total rapports")}</span>
             <strong>{total}</strong>
           </div>
 
@@ -724,7 +707,7 @@ function Rapports({ utilisateur }) {
           </div>
 
           <div>
-            <span>Terminés</span>
+            <span>{t("Terminés")}</span>
             <strong>{termines}</strong>
           </div>
 
@@ -737,7 +720,7 @@ function Rapports({ utilisateur }) {
           </div>
 
           <div>
-            <span>En cours</span>
+            <span>{t("En cours")}</span>
             <strong>{enCours}</strong>
           </div>
 
@@ -750,7 +733,7 @@ function Rapports({ utilisateur }) {
           </div>
 
           <div>
-            <span>En attente</span>
+            <span>{t("En attente")}</span>
             <strong>{enAttente}</strong>
           </div>
 
@@ -765,11 +748,11 @@ function Rapports({ utilisateur }) {
           <div>
 
             <h2>
-              Liste des rapports
+              {t("Liste des rapports")}
             </h2>
 
             <span>
-              {rapportsFiltres.length} rapport
+              {rapportsFiltres.length} {t("rapport")}
               {rapportsFiltres.length > 1
                 ? "s"
                 : ""}
@@ -783,7 +766,7 @@ function Rapports({ utilisateur }) {
 
             <input
               type="text"
-              placeholder="Rechercher un rapport..."
+              placeholder={t("Rechercher un rapport...")}
               value={recherche}
               onChange={(event) =>
                 setRecherche(
@@ -799,7 +782,7 @@ function Rapports({ utilisateur }) {
         {erreur && (
           <div className="rapport-error">
             <AlertCircle size={18} />
-            <span>{erreur}</span>
+            <span>{t(erreur)}</span>
           </div>
         )}
 
@@ -842,7 +825,7 @@ function Rapports({ utilisateur }) {
                   }}
                 >
                   <UserPlus size={15} />
-                  Production autorisée
+                  {t("Production autorisée")}
                 </span>
               )}
             </div>
@@ -858,7 +841,7 @@ function Rapports({ utilisateur }) {
             />
 
             <p>
-              Chargement des rapports...
+              {t("Chargement des rapports...")}
             </p>
 
           </div>
@@ -871,14 +854,14 @@ function Rapports({ utilisateur }) {
 
             <h3>
               {recherche
-                ? "Aucun résultat"
-                : "Aucun rapport disponible"}
+                ? t("Aucun résultat")
+                : t("Aucun rapport disponible")}
             </h3>
 
             <p>
               {recherche
-                ? "Aucun rapport ne correspond à votre recherche."
-                : "Les rapports de tâches apparaîtront ici."}
+                ? t("Aucun rapport ne correspond à votre recherche.")
+                : t("Les rapports de tâches apparaîtront ici.")}
             </p>
 
           </div>
@@ -892,11 +875,11 @@ function Rapports({ utilisateur }) {
               <thead>
 
                 <tr>
-                  <th>Rapport</th>
-                  <th>Employé</th>
-                  <th>Date</th>
-                  <th>Statut</th>
-                  <th>Action</th>
+                  <th>{t("Rapport")}</th>
+                  <th>{t("Employé")}</th>
+                  <th>{t("Date")}</th>
+                  <th>{t("Statut")}</th>
+                  <th>{t("Action")}</th>
                 </tr>
 
               </thead>
@@ -963,9 +946,7 @@ function Rapports({ utilisateur }) {
                       </td>
 
                       <td>
-                        {afficherStatut(
-                          rapport
-                        )}
+                        {t(afficherStatut(rapport))}
 
                         {" "}
                         {afficherRetard(rapport)}
@@ -984,7 +965,7 @@ function Rapports({ utilisateur }) {
                             }
                           >
                             <Eye size={16} />
-                            Voir
+                            {t("Voir")}
                           </button>
                         )}
 
@@ -1029,8 +1010,8 @@ function Rapports({ utilisateur }) {
           >
             <div className="rapport-modal-header">
               <div>
-                <span>SOUMISSION</span>
-                <h2>Nouveau rapport périodique</h2>
+                <span>{t("SOUMISSION")}</span>
+                <h2>{t("Nouveau rapport périodique")}</h2>
               </div>
 
               <button
@@ -1039,18 +1020,17 @@ function Rapports({ utilisateur }) {
                   setModalNouveau(false)
                 }
               >
-                ×
+                {t("×")}
               </button>
             </div>
 
             <div className="rapport-modal-body">
               <p style={{ fontSize: "0.85rem", color: "#64748b" }}>
-                Votre rapport sera transmis à votre supérieur
-                hiérarchique direct.
+                {t("Votre rapport sera transmis à votre supérieur hiérarchique direct.")}
               </p>
 
               <div className="rapport-detail rapport-detail-full">
-                <span>Période du début</span>
+                <span>{t("Période du début")}</span>
                 <input
                   type="date"
                   value={
@@ -1067,7 +1047,7 @@ function Rapports({ utilisateur }) {
               </div>
 
               <div className="rapport-detail rapport-detail-full">
-                <span>Période de fin</span>
+                <span>{t("Période de fin")}</span>
                 <input
                   type="date"
                   value={
@@ -1084,7 +1064,7 @@ function Rapports({ utilisateur }) {
               </div>
 
               <div className="rapport-detail rapport-detail-full">
-                <span>Travail effectué *</span>
+                <span>{t("Travail effectué *")}</span>
                 <textarea
                   rows={5}
                   value={
@@ -1097,13 +1077,13 @@ function Rapports({ utilisateur }) {
                         event.target.value,
                     })
                   }
-                  placeholder="Activités réalisées sur la période..."
+                  placeholder={t("Activités réalisées sur la période...")}
                   required
                 />
               </div>
 
               <div className="rapport-detail rapport-detail-full">
-                <span>Difficultés rencontrées</span>
+                <span>{t("Difficultés rencontrées")}</span>
                 <textarea
                   rows={3}
                   value={
@@ -1116,12 +1096,12 @@ function Rapports({ utilisateur }) {
                         event.target.value,
                     })
                   }
-                  placeholder="Obstacles, retards, besoins..."
+                  placeholder={t("Obstacles, retards, besoins...")}
                 />
               </div>
 
               <div className="rapport-detail rapport-detail-full">
-                <span>Commentaire</span>
+                <span>{t("Commentaire")}</span>
                 <textarea
                   rows={2}
                   value={
@@ -1134,7 +1114,7 @@ function Rapports({ utilisateur }) {
                         event.target.value,
                     })
                   }
-                  placeholder="Information complémentaire..."
+                  placeholder={t("Information complémentaire...")}
                 />
               </div>
             </div>
@@ -1147,7 +1127,7 @@ function Rapports({ utilisateur }) {
                 }
                 disabled={envoi}
               >
-                Annuler
+                {t("Annuler")}
               </button>
 
               <button
@@ -1159,8 +1139,8 @@ function Rapports({ utilisateur }) {
                 }
               >
                 {envoi
-                  ? "Envoi en cours..."
-                  : "Soumettre le rapport"}
+                  ? t("Envoi en cours...")
+                  : t("Soumettre le rapport")}
               </button>
             </div>
           </div>
@@ -1188,7 +1168,7 @@ function Rapports({ utilisateur }) {
               <div>
 
                 <span>
-                  CONSULTATION
+                  {t("CONSULTATION")}
                 </span>
 
                 <h2>
@@ -1205,7 +1185,7 @@ function Rapports({ utilisateur }) {
                   setRapportSelectionne(null)
                 }
               >
-                ×
+                {t("×")}
               </button>
 
             </div>
@@ -1215,7 +1195,7 @@ function Rapports({ utilisateur }) {
               <div className="rapport-detail">
 
                 <span>
-                  Employé
+                  {t("Employé")}
                 </span>
 
                 <strong>
@@ -1229,7 +1209,7 @@ function Rapports({ utilisateur }) {
               <div className="rapport-detail">
 
                 <span>
-                  Date
+                  {t("Date")}
                 </span>
 
                 <strong>
@@ -1243,7 +1223,7 @@ function Rapports({ utilisateur }) {
               <div className="rapport-detail">
 
                 <span>
-                  Statut
+                  {t("Statut")}
                 </span>
 
                 <div>
@@ -1257,7 +1237,7 @@ function Rapports({ utilisateur }) {
               <div className="rapport-detail rapport-detail-full">
 
                 <span>
-                  Description
+                  {t("Description")}
                 </span>
 
                 <p>
@@ -1271,13 +1251,13 @@ function Rapports({ utilisateur }) {
               <div className="rapport-detail">
 
                 <span>
-                  Supérieur destinataire
+                  {t("Supérieur destinataire")}
                 </span>
 
                 <strong>
                   {rapportSelectionne.destinataire
                     ? `${rapportSelectionne.destinataire.prenom || ""} ${rapportSelectionne.destinataire.nom || ""}`.trim()
-                    : "Non assigné"}
+                    : t("Non assigné")}
                 </strong>
 
               </div>
@@ -1285,15 +1265,13 @@ function Rapports({ utilisateur }) {
               <div className="rapport-detail">
 
                 <span>
-                  Échéance
+                  {t("Échéance")}
                 </span>
 
                 <strong>
                   {rapportSelectionne.date_limite_soumission
-                    ? new Date(
-                        rapportSelectionne.date_limite_soumission
-                      ).toLocaleDateString("fr-FR")
-                    : "Aucune échéance"}
+                    ? formaterDateSelonPreference(rapportSelectionne.date_limite_soumission)
+                    : t("Aucune échéance")}
                 </strong>
 
                 {" "}
@@ -1305,7 +1283,7 @@ function Rapports({ utilisateur }) {
                 <div className="rapport-detail rapport-detail-full">
 
                   <span>
-                    Motif de la décision
+                    {t("Motif de la décision")}
                   </span>
 
                   <p>
@@ -1323,14 +1301,14 @@ function Rapports({ utilisateur }) {
                 <div className="rapport-detail rapport-detail-full">
 
                   <span>
-                    Historique des étapes
+                    {t("Historique des étapes")}
                   </span>
 
                   <ul style={{ margin: 0, paddingLeft: "18px", fontSize: "0.85rem" }}>
                     {rapportSelectionne.validations.map(
                       (etape) => (
                         <li key={etape.id_validation}>
-                          {etape.action} — niveau {etape.niveau}
+                          {etape.action} {t("— niveau")} {etape.niveau}
                           {" "}
                           {etape.utilisateur
                             ? `(${etape.utilisateur.prenom} ${etape.utilisateur.nom})`
@@ -1338,9 +1316,7 @@ function Rapports({ utilisateur }) {
                           {" "}
                           —{" "}
                           {etape.created_at
-                            ? new Date(
-                                etape.created_at
-                              ).toLocaleString("fr-FR")
+                            ? `${formaterDateSelonPreference(etape.created_at)} ${new Date(etape.created_at).toLocaleTimeString(document.documentElement.lang === "en" ? "en-GB" : "fr-FR", { hour: "2-digit", minute: "2-digit" })}`
                             : ""}
                           {etape.motif
                             ? ` — ${etape.motif}`
@@ -1358,12 +1334,11 @@ function Rapports({ utilisateur }) {
                 <div className="rapport-detail rapport-detail-full">
 
                   <span>
-                    Contrôle
+                    {t("Contrôle")}
                   </span>
 
                   <p>
-                    Vous disposez de l'autorisation
-                    de contrôle des rapports.
+                    {t("Vous disposez de l'autorisation de contrôle des rapports.")}
                   </p>
 
                 </div>
@@ -1383,7 +1358,7 @@ function Rapports({ utilisateur }) {
                 <div className="rapport-detail rapport-detail-full">
 
                   <span>
-                    Décision
+                    {t("Décision")}
                   </span>
 
                   <textarea
@@ -1394,7 +1369,7 @@ function Rapports({ utilisateur }) {
                         event.target.value
                       )
                     }
-                    placeholder="Motif (obligatoire pour correction ou rejet)..."
+                    placeholder={t("Motif (obligatoire pour correction ou rejet)...")}
                   />
 
                   <div
@@ -1416,7 +1391,7 @@ function Rapports({ utilisateur }) {
                     >
                       {enCoursDecision
                         ? "..."
-                        : "Valider"}
+                        : t("Valider")}
                     </button>
 
                     <button
@@ -1430,7 +1405,7 @@ function Rapports({ utilisateur }) {
                         enCoursDecision
                       }
                     >
-                      Demander une correction
+                      {t("Demander une correction")}
                     </button>
 
                     <button
@@ -1442,7 +1417,7 @@ function Rapports({ utilisateur }) {
                         enCoursDecision
                       }
                     >
-                      Refuser
+                      {t("Refuser")}
                     </button>
                   </div>
 
@@ -1460,7 +1435,7 @@ function Rapports({ utilisateur }) {
                   setRapportSelectionne(null)
                 }
               >
-                Fermer
+                {t("Fermer")}
               </button>
 
             </div>

@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react"
+import { useLanguage } from "../context/LanguageContext";
+import { formaterDateSelonPreference } from "../context/LanguageContext";
 
 import {
+  FileText,
   Plus,
   Search,
-  FileText,
   Clock3,
   CircleCheck,
   CircleX,
@@ -23,6 +25,8 @@ import {
 import { ROLES } from "../config/roles"
 
 import "../styles/pages/demandes.css"
+
+import api from "../config/apiClient"
 
 
 const demandesInitiales = [
@@ -67,14 +71,51 @@ const typesDemande = [
   "Autre"
 ];
 
+function formaterDateDemande(date) {
+  if (!date) return "";
+
+  const valeur = new Date(date);
+  if (Number.isNaN(valeur.getTime())) return String(date);
+
+  return formaterDateSelonPreference(valeur);
+}
+
+function normaliserDemande(demande) {
+  const demandeur = demande?.demandeur;
+  const nomDemandeur =
+    typeof demandeur === "string"
+      ? demandeur
+      : [demandeur?.prenom, demandeur?.nom]
+          .filter(Boolean)
+          .join(" ") || demandeur?.email || "Collaborateur";
+
+  return {
+    ...demande,
+    id: demande?.id ?? demande?.id_demande,
+    demandeur: nomDemandeur,
+    demandeur_id:
+      demande?.id_demandeur ?? demandeur?.id_utilisateur,
+    type:
+      demande?.type ??
+      demande?.type_libelle ??
+      demande?.type_demande ??
+      "",
+    statut: demande?.statut_libelle ?? demande?.statut ?? "",
+    date:
+      demande?.date ??
+      formaterDateDemande(demande?.date_demande),
+    objet: demande?.objet ?? "",
+    description: demande?.description ?? "",
+  };
+}
+
 
 function Demandes({ utilisateur }) {
+  const { t } = useLanguage();
 
   const role = getRole(utilisateur) || ROLES.EMPLOYE
 
-  const [demandes, setDemandes] = useState(
-    demandesInitiales
-  )
+  const [demandes, setDemandes] = useState([])
 
   const [recherche, setRecherche] = useState("")
   const [filtre, setFiltre] = useState("Tous")
@@ -105,6 +146,45 @@ function Demandes({ utilisateur }) {
 
     if (params.get("nouvelle") === "1") {
       setModalCreation(true)
+    }
+  }, [])
+
+  useEffect(() => {
+    let actif = true
+
+    const charger = async () => {
+      setMessage("")
+      try {
+        const response = await api.get("/demandes")
+        const data = response.data || {}
+        const liste =
+          data.demandes ||
+          data.data ||
+          data.resultats ||
+          []
+        if (actif) {
+          setDemandes(
+            Array.isArray(liste)
+              ? liste.map(normaliserDemande)
+              : []
+          )
+        }
+      } catch (error) {
+        if (actif) {
+          setMessage(
+            error?.response?.data?.message ||
+              "Impossible de charger les demandes"
+          )
+        }
+      } finally {
+        if (actif) setMessage("")
+      }
+    }
+
+    charger()
+
+    return () => {
+      actif = false
     }
   }, [])
 
@@ -143,6 +223,27 @@ function Demandes({ utilisateur }) {
     PERMISSIONS.REFUSER_DEMANDE
   )
 
+  const estDemandeur = (demande) => {
+    // L'administrateur de test peut tout traiter, y compris ses propres demandes.
+    if (role === ROLES.ADMINISTRATEUR) return false
+
+    const idDemandeur =
+      demande?.demandeur_id ??
+      demande?.id_demandeur ??
+      demande?.demandeur?.id_utilisateur
+    const idUtilisateur =
+      utilisateur?.id_utilisateur ?? utilisateur?.id
+
+    return (
+      idDemandeur != null &&
+      idUtilisateur != null &&
+      String(idDemandeur) === String(idUtilisateur)
+    )
+  }
+
+  const peutTraiterSelectionnee =
+    peutTraiter && !estDemandeur(demandeSelectionnee)
+
 
   /*
    * RÈGLE MÉTIER :
@@ -171,18 +272,42 @@ function Demandes({ utilisateur }) {
 
     if (role === ROLES.EMPLOYE) {
 
-      const nomComplet = [
+      const identifiantUtilisateur =
+        utilisateur?.id_utilisateur ?? utilisateur?.id
+
+      const nomsUtilisateur = [
         utilisateur?.nom,
         utilisateur?.prenom
       ]
         .filter(Boolean)
+      const nomComplet = nomsUtilisateur.join(" ").toLowerCase()
+      const nomCompletInverse = [...nomsUtilisateur]
+        .reverse()
         .join(" ")
+        .toLowerCase()
 
       resultat = resultat.filter(
-        (demande) =>
-          demande.demandeur === utilisateur?.nom ||
-          demande.demandeur === nomComplet ||
-          demande.demandeur === "Employé"
+        (demande) => {
+          if (
+            identifiantUtilisateur != null &&
+            demande.demandeur_id != null
+          ) {
+            return String(demande.demandeur_id) ===
+              String(identifiantUtilisateur)
+          }
+
+          const nomDemandeur = String(
+            demande.demandeur ?? ""
+          ).toLowerCase()
+
+          return (
+            nomDemandeur === String(utilisateur?.nom ?? "").toLowerCase() ||
+            nomDemandeur === nomComplet ||
+            nomDemandeur === nomCompletInverse ||
+            nomDemandeur === "employé" ||
+            nomDemandeur === "employe"
+          )
+        }
       )
     }
 
@@ -198,16 +323,13 @@ function Demandes({ utilisateur }) {
         .trim()
 
       resultat = resultat.filter(
-        (demande) =>
-          demande.objet
-            .toLowerCase()
-            .includes(terme) ||
-          demande.type
-            .toLowerCase()
-            .includes(terme) ||
-          demande.demandeur
-            .toLowerCase()
-            .includes(terme)
+        (demande) => [
+          demande.objet,
+          demande.type,
+          demande.demandeur,
+        ].some((valeur) =>
+          String(valeur ?? "").toLowerCase().includes(terme)
+        )
       )
     }
 
@@ -279,6 +401,16 @@ function Demandes({ utilisateur }) {
     id,
     nouveauStatut
   ) => {
+
+    const demande = demandes.find(
+      (element) =>
+        String(element.id ?? element.id_demande) === String(id)
+    )
+
+    if (estDemandeur(demande)) {
+      setMessage("Vous ne pouvez pas traiter votre propre demande.")
+      return
+    }
 
     if (
       nouveauStatut === "Acceptée" &&
@@ -375,15 +507,7 @@ function Demandes({ utilisateur }) {
     }
 
 
-    const dateActuelle =
-      new Date().toLocaleDateString(
-        "fr-FR",
-        {
-          day: "numeric",
-          month: "long",
-          year: "numeric"
-        }
-      )
+    const dateActuelle = formaterDateSelonPreference(new Date());
 
 
     const nomDemandeur =
@@ -484,12 +608,11 @@ function Demandes({ utilisateur }) {
           <AlertCircle size={32} />
 
           <h3>
-            Accès non autorisé
+            {t("Accès non autorisé")}
           </h3>
 
           <p>
-            Vous n'avez pas la permission
-            d'accéder au module des demandes.
+            {t("Vous n'avez pas la permission d'accéder au module des demandes.")}
           </p>
 
         </section>
@@ -510,7 +633,7 @@ function Demandes({ utilisateur }) {
           <Check size={17} />
 
           <span>
-            {message}
+            {t(message)}
           </span>
 
           <button
@@ -529,17 +652,17 @@ function Demandes({ utilisateur }) {
         <div>
 
           <span className="demandes-eyebrow">
-            GAIN OFFICE
+            {t("GAIN OFFICE")}
           </span>
 
           <h1>
-            Demandes
+            {t("Demandes")}
           </h1>
 
           <p>
             {role === ROLES.EMPLOYE
-              ? "Envoyez et suivez vos demandes."
-              : "Gérez les demandes reçues des collaborateurs."
+              ? t("Envoyez et suivez vos demandes.")
+              : t("Gérez les demandes reçues des collaborateurs.")
             }
           </p>
 
@@ -558,7 +681,7 @@ function Demandes({ utilisateur }) {
 
             <Plus size={18} />
 
-            Nouvelle demande
+            {t("Nouvelle demande")}
 
           </button>
         )}
@@ -584,8 +707,8 @@ function Demandes({ utilisateur }) {
           <strong>
 
             {peutTraiter
-              ? "Espace de gestion"
-              : "Espace personnel"
+              ? t("Espace de gestion")
+              : t("Espace personnel")
             }
 
           </strong>
@@ -593,8 +716,8 @@ function Demandes({ utilisateur }) {
           <span>
 
             {peutTraiter
-              ? "Consultez et traitez les demandes des collaborateurs."
-              : "Créez et suivez vos demandes administratives."
+              ? t("Consultez et traitez les demandes des collaborateurs.")
+              : t("Créez et suivez vos demandes administratives.")
             }
 
           </span>
@@ -619,7 +742,7 @@ function Demandes({ utilisateur }) {
             </strong>
 
             <span>
-              Total
+              {t("Total")}
             </span>
 
           </div>
@@ -642,7 +765,7 @@ function Demandes({ utilisateur }) {
             </strong>
 
             <span>
-              En attente
+              {t("En attente")}
             </span>
 
           </div>
@@ -665,7 +788,7 @@ function Demandes({ utilisateur }) {
             </strong>
 
             <span>
-              Acceptées
+              {t("Acceptées")}
             </span>
 
           </div>
@@ -688,7 +811,7 @@ function Demandes({ utilisateur }) {
             </strong>
 
             <span>
-              Refusées
+              {t("Refusées")}
             </span>
 
           </div>
@@ -706,7 +829,7 @@ function Demandes({ utilisateur }) {
 
           <input
             type="text"
-            placeholder="Rechercher une demande..."
+            placeholder={t("Rechercher une demande...")}
             value={recherche}
             onChange={(event) =>
               setRecherche(
@@ -728,19 +851,19 @@ function Demandes({ utilisateur }) {
         >
 
           <option value="Tous">
-            Tous les statuts
+            {t("Tous les statuts")}
           </option>
 
           <option value="En attente">
-            En attente
+            {t("En attente")}
           </option>
 
           <option value="Acceptée">
-            Acceptées
+            {t("Acceptées")}
           </option>
 
           <option value="Refusée">
-            Refusées
+            {t("Refusées")}
           </option>
 
         </select>
@@ -757,12 +880,11 @@ function Demandes({ utilisateur }) {
             <FileText size={30} />
 
             <h3>
-              Aucune demande trouvée
+              {t("Aucune demande trouvée")}
             </h3>
 
             <p>
-              Aucune demande ne correspond
-              à vos critères.
+              {t("Aucune demande ne correspond à vos critères.")}
             </p>
 
           </div>
@@ -770,11 +892,15 @@ function Demandes({ utilisateur }) {
         ) : (
 
           demandesVisibles.map(
-            (demande) => (
+            (demande, index) => (
 
               <article
                 className="demande-card"
-                key={demande.id}
+                key={
+                  demande.id ??
+                  demande.id_demande ??
+                  `${demande.objet}-${demande.date}-${index}`
+                }
               >
 
                 <div className="demande-icon">
@@ -798,7 +924,7 @@ function Demandes({ utilisateur }) {
                         demande.statut
                       )}`}
                     >
-                      {demande.statut}
+                      {t(demande.statut)}
                     </span>
 
                   </div>
@@ -833,7 +959,7 @@ function Demandes({ utilisateur }) {
 
                       <FileText size={13} />
 
-                      {demande.type}
+                      {t(demande.type)}
 
                     </span>
 
@@ -851,7 +977,7 @@ function Demandes({ utilisateur }) {
                     )
                   }
                 >
-                  Voir
+                  {t("Voir")}
                 </button>
 
               </article>
@@ -883,16 +1009,15 @@ function Demandes({ utilisateur }) {
               <div>
 
                 <span>
-                  NOUVELLE DEMANDE
+                  {t("NOUVELLE DEMANDE")}
                 </span>
 
                 <h2>
-                  Envoyer une demande
+                  {t("Envoyer une demande")}
                 </h2>
 
                 <p>
-                  Remplissez les informations
-                  nécessaires.
+                  {t("Remplissez les informations nécessaires.")}
                 </p>
 
               </div>
@@ -912,7 +1037,7 @@ function Demandes({ utilisateur }) {
 
               <label>
 
-                Type de demande
+                {t("Type de demande")}
 
                 <select
                   name="type"
@@ -927,7 +1052,7 @@ function Demandes({ utilisateur }) {
                         key={type}
                         value={type}
                       >
-                        {type}
+                        {t(type)}
                       </option>
 
                     )
@@ -940,14 +1065,14 @@ function Demandes({ utilisateur }) {
 
               <label>
 
-                Objet
+                {t("Objet")}
 
                 <input
                   type="text"
                   name="objet"
                   value={formulaire.objet}
                   onChange={modifierFormulaire}
-                  placeholder="Objet de votre demande"
+                  placeholder={t("Objet de votre demande")}
                 />
 
               </label>
@@ -955,14 +1080,14 @@ function Demandes({ utilisateur }) {
 
               <label>
 
-                Message
+                {t("Message")}
 
                 <textarea
                   name="message"
                   value={formulaire.message}
                   onChange={modifierFormulaire}
                   rows="5"
-                  placeholder="Expliquez votre demande..."
+                  placeholder={t("Expliquez votre demande...")}
                 />
 
               </label>
@@ -976,7 +1101,7 @@ function Demandes({ utilisateur }) {
                 type="button"
                 onClick={fermerTout}
               >
-                Annuler
+                {t("Annuler")}
               </button>
 
 
@@ -988,7 +1113,7 @@ function Demandes({ utilisateur }) {
 
                 <Check size={16} />
 
-                Envoyer la demande
+                {t("Envoyer la demande")}
 
               </button>
 
@@ -1020,7 +1145,7 @@ function Demandes({ utilisateur }) {
               <div>
 
                 <span>
-                  DÉTAIL DE LA DEMANDE
+                  {t("DÉTAIL DE LA DEMANDE")}
                 </span>
 
                 <h2>
@@ -1028,8 +1153,7 @@ function Demandes({ utilisateur }) {
                 </h2>
 
                 <p>
-                  Informations relatives
-                  à cette demande.
+                  {t("Informations relatives à cette demande.")}
                 </p>
 
               </div>
@@ -1054,7 +1178,7 @@ function Demandes({ utilisateur }) {
               <div className="demande-detail-description">
 
                 <span>
-                  Description
+                  {t("Description")}
                 </span>
 
                 <p>
@@ -1071,7 +1195,7 @@ function Demandes({ utilisateur }) {
                 <div>
 
                   <span>
-                    Demandeur
+                    {t("Demandeur")}
                   </span>
 
                   <strong>
@@ -1090,7 +1214,7 @@ function Demandes({ utilisateur }) {
                 <div>
 
                   <span>
-                    Type
+                    {t("Type")}
                   </span>
 
                   <strong>
@@ -1109,7 +1233,7 @@ function Demandes({ utilisateur }) {
                 <div>
 
                   <span>
-                    Date
+                    {t("Date")}
                   </span>
 
                   <strong>
@@ -1128,7 +1252,7 @@ function Demandes({ utilisateur }) {
                 <div>
 
                   <span>
-                    Statut
+                    {t("Statut")}
                   </span>
 
                   <strong
@@ -1148,7 +1272,7 @@ function Demandes({ utilisateur }) {
             </div>
 
 
-            {peutTraiter &&
+            {peutTraiterSelectionnee &&
               demandeSelectionnee.statut ===
                 "En attente" && (
 
@@ -1161,11 +1285,11 @@ function Demandes({ utilisateur }) {
                   <div>
 
                     <strong>
-                      Traitement de la demande
+                      {t("Traitement de la demande")}
                     </strong>
 
                     <span>
-                      Choisissez une décision.
+                      {t("Choisissez une décision.")}
                     </span>
 
                   </div>
@@ -1190,7 +1314,7 @@ function Demandes({ utilisateur }) {
 
                       <CircleX size={16} />
 
-                      Refuser
+                      {t("Refuser")}
 
                     </button>
 
@@ -1212,7 +1336,7 @@ function Demandes({ utilisateur }) {
 
                       <CircleCheck size={16} />
 
-                      Accepter
+                      {t("Accepter")}
 
                     </button>
 
@@ -1225,7 +1349,7 @@ function Demandes({ utilisateur }) {
             )}
 
 
-            {!peutTraiter &&
+            {!peutTraiterSelectionnee &&
               demandeSelectionnee.statut ===
                 "En attente" && (
 
@@ -1234,8 +1358,9 @@ function Demandes({ utilisateur }) {
                 <AlertCircle size={17} />
 
                 <span>
-                  Votre demande est actuellement
-                  en attente de traitement.
+                  {estDemandeur(demandeSelectionnee)
+                    ? t("Vous ne pouvez pas traiter votre propre demande. Elle reste en attente d’un autre valideur.")
+                    : t("Votre demande est actuellement en attente de traitement.")}
                 </span>
 
               </div>
@@ -1251,7 +1376,7 @@ function Demandes({ utilisateur }) {
                 <CircleCheck size={17} />
 
                 <span>
-                  Cette demande a été acceptée.
+                  {t("Cette demande a été acceptée.")}
                 </span>
 
               </div>
@@ -1267,7 +1392,7 @@ function Demandes({ utilisateur }) {
                 <CircleX size={17} />
 
                 <span>
-                  Cette demande a été refusée.
+                  {t("Cette demande a été refusée.")}
                 </span>
 
               </div>

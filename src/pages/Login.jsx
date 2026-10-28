@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useLanguage } from "../context/LanguageContext";
 
 import {
   Building2,
@@ -19,6 +20,7 @@ import { API_URL } from "../config/api";
 import api from "../config/apiClient";
 
 function Login({ onConnexion }) {
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [motDePasse, setMotDePasse] = useState("");
   const [voirMotDePasse, setVoirMotDePasse] = useState(false);
@@ -179,23 +181,21 @@ function Login({ onConnexion }) {
             <div className="login-company">
 
               <span>
-                GAIN OFFICE
+                {t("GAIN OFFICE")}
               </span>
 
               <strong>
-                Groupe GAIN SARL
+                {t("Groupe GAIN SARL")}
               </strong>
 
             </div>
 
             <h1>
-              ESPACE PROFESSIONNEL
+              {t("ESPACE PROFESSIONNEL")}
             </h1>
 
             <p>
-              Plateforme professionnelle
-              de gestion administrative
-              de Groupe GAIN SARL.
+              {t("Plateforme professionnelle de gestion administrative de Groupe GAIN SARL.")}
             </p>
 
             <div className="login-features">
@@ -207,7 +207,7 @@ function Login({ onConnexion }) {
                 </div>
 
                 <span>
-                  Gestion des employés
+                  {t("Gestion des employés")}
                 </span>
 
               </div>
@@ -221,7 +221,7 @@ function Login({ onConnexion }) {
                 </div>
 
                 <span>
-                  Gestion des tâches
+                  {t("Gestion des tâches")}
                 </span>
 
               </div>
@@ -233,7 +233,7 @@ function Login({ onConnexion }) {
                 </div>
 
                 <span>
-                  Suivi des demandes
+                  {t("Suivi des demandes")}
                 </span>
 
               </div>
@@ -247,7 +247,7 @@ function Login({ onConnexion }) {
                 </div>
 
                 <span>
-                  Rapports et notifications
+                  {t("Rapports et notifications")}
                 </span>
 
               </div>
@@ -269,16 +269,15 @@ function Login({ onConnexion }) {
             <div className="login-card-header">
 
               <span className="login-welcome">
-                GAIN OFFICE
+                {t("GAIN OFFICE")}
               </span>
 
               <h2>
-                Bienvenue
+                {t("Bienvenue")}
               </h2>
 
               <p>
-                Connectez-vous à votre
-                espace de gestion.
+                {t("Connectez-vous à votre espace de gestion.")}
               </p>
 
             </div>
@@ -293,7 +292,7 @@ function Login({ onConnexion }) {
               <div className="login-field">
 
                 <label htmlFor="email">
-                  Adresse e-mail
+                  {t("Adresse e-mail")}
                 </label>
 
                 <div className="login-input-wrapper">
@@ -312,7 +311,7 @@ function Login({ onConnexion }) {
                         event.target.value
                       )
                     }
-                    placeholder="exemple@gain.ci"
+                    placeholder={t("exemple@gain.ci")}
                     autoComplete="email"
                     disabled={chargement}
                     className="login-input"
@@ -327,7 +326,7 @@ function Login({ onConnexion }) {
               <div className="login-field">
 
                 <label htmlFor="motDePasse">
-                  Mot de passe
+                  {t("Mot de passe")}
                 </label>
 
                 <div className="login-input-wrapper">
@@ -350,7 +349,7 @@ function Login({ onConnexion }) {
                         event.target.value
                       )
                     }
-                    placeholder="Votre mot de passe"
+                    placeholder={t("Votre mot de passe")}
                     autoComplete="current-password"
                     disabled={chargement}
                     className="login-input password"
@@ -388,7 +387,7 @@ function Login({ onConnexion }) {
                       "/mot-de-passe-oublie";
                   }}
                 >
-                  Mot de passe oublié ?
+                  {t("Mot de passe oublié ?")}
                 </button>
 
               </div>
@@ -415,12 +414,12 @@ function Login({ onConnexion }) {
                 {chargement ? (
                   <>
                     <span className="login-spinner" />
-                    Connexion en cours...
+                    {t("Connexion en cours...")}
                   </>
                 ) : (
                   <>
                     <LogIn size={18} />
-                    Se connecter
+                    {t("Se connecter")}
                   </>
                 )}
 
@@ -433,13 +432,13 @@ function Login({ onConnexion }) {
               <ShieldCheck size={15} />
 
               <span>
-                Connexion sécurisée
+                {t("Connexion sécurisée")}
               </span>
 
             </div>
 
             <div className="login-footer">
-              © Groupe GAIN SARL 2026
+              {t("© Groupe GAIN SARL 2026")}
             </div>
 
           </div>

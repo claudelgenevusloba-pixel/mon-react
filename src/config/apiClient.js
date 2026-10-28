@@ -39,6 +39,7 @@ api.interceptors.response.use(
       localStorage.removeItem("token");
       localStorage.removeItem("gain_office_user");
       localStorage.removeItem("user");
+      window.dispatchEvent(new Event("gain-office:session-expired"));
     }
 
     return Promise.reject(error);

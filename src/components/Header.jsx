@@ -8,10 +8,8 @@ import {
   Bell,
   ChevronDown,
   LogOut,
-  Settings,
   User,
   Search,
-  FileText,
   X,
 } from "lucide-react";
 
@@ -22,6 +20,7 @@ import {
 
 import { PERMISSIONS } from "../config/permissions";
 import { aPermission } from "../config/access";
+import { useLanguage } from "../context/LanguageContext";
 
 import "../styles/components/header.css";
 
@@ -32,6 +31,7 @@ function Header({
   utilisateur,
   onDeconnexion,
 }) {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -235,8 +235,6 @@ function Header({
 
     if (lien) {
       navigate(lien);
-    } else {
-      navigate("/notifications");
     }
   };
   const marquerToutesLues = async () => {
@@ -446,8 +444,6 @@ function Header({
   };
 
   const allerProfil = () => {
-    if (!peutVoirParametres) return;
-
     setMenuOuvert(false);
     navigate("/parametres");
   };
@@ -475,7 +471,7 @@ function Header({
       notification.titre ||
       notification.objet ||
       notification.type ||
-      "Notification"
+      t("Notification")
     );
   };
 
@@ -486,7 +482,7 @@ function Header({
       notification.message ||
       notification.description ||
       notification.contenu ||
-      "Nouvelle notification"
+      t("Nouvelle notification")
     );
   };
 
@@ -498,7 +494,7 @@ function Header({
         <div className="header-title">
           <h1>GAIN OFFICE</h1>
           <span>
-            Gestion administrative
+            {t("Gestion administrative")}
           </span>
         </div>
 
@@ -507,7 +503,7 @@ function Header({
       <div className="header-right">
 
         {/* =================================================
-            RECHERCHE
+            {t("RECHERCHE")}
         ================================================= */}
 
         <div className="header-search">
@@ -516,7 +512,7 @@ function Header({
 
           <input
             type="text"
-            placeholder="Rechercher..."
+            placeholder={t("Rechercher...")}
             value={recherche}
             onChange={(event) =>
               setRecherche(
@@ -544,7 +540,7 @@ function Header({
               onClick={
                 ouvrirNotifications
               }
-              aria-label="Notifications"
+              aria-label={t("Notifications")}
             >
 
               <Bell size={21} />
@@ -566,15 +562,11 @@ function Header({
 
                   <div>
                     <strong>
-                      Notifications
+                      {t("Notifications")}
                     </strong>
 
                     <span>
-                      {notificationsNonLues} non lue
-                      {notificationsNonLues >
-                      1
-                        ? "s"
-                        : ""}
+                      {notificationsNonLues} {t(notificationsNonLues === 1 ? "non lue" : "non lues")}
                     </span>
                   </div>
 
@@ -584,14 +576,14 @@ function Header({
                       className="notifications-mark-all"
                       onClick={marquerToutesLues}
                     >
-                      Tout marquer comme lu
+                      {t("Tout marquer comme lu")}
                     </button>
                   )}
 
                   <button
                     type="button"
                     className="notifications-close-button"
-                    aria-label="Fermer les notifications"
+                    aria-label={t("Fermer les notifications")}
                     onClick={() =>
                       setNotificationsOuvertes(false)
                     }
@@ -606,7 +598,7 @@ function Header({
                   {chargementNotifications ? (
                     <div className="notifications-empty">
                       <Bell size={28} />
-                      <p>Chargement...</p>
+                      <p>{t("Chargement...")}</p>
                     </div>
                   ) : erreurNotifications ? (
                     <div className="notifications-empty">
@@ -619,7 +611,7 @@ function Header({
                       <Bell size={28} />
 
                       <p>
-                        Aucune notification
+                        {t("Aucune notification")}
                       </p>
 
                     </div>
@@ -672,19 +664,8 @@ function Header({
                   )}
 
                 </div>
-
-                <button
-                  type="button"
-                  className="notifications-footer-button"
-                  onClick={
-                    allerNotifications
-                  }
-                >
-                  Voir toutes les notifications
-                </button>
-
               </div>
-            )}
+              )}
 
           </div>
         )}
@@ -753,41 +734,13 @@ function Header({
 
               {/* MON PROFIL */}
 
-              {peutVoirParametres && (
-                <button
-                  type="button"
-                  onClick={allerProfil}
-                >
-                  <User size={17} />
-                  Mon profil
-                </button>
-              )}
-
-              {/* RAPPORTS */}
-
-              {peutVoirRapports && (
-                <button
-                  type="button"
-                  onClick={allerRapports}
-                >
-                  <FileText size={17} />
-                  Rapports
-                </button>
-              )}
-
-              {/* PARAMÈTRES */}
-
-              {peutVoirParametres && (
-                <button
-                  type="button"
-                  onClick={
-                    allerParametres
-                  }
-                >
-                  <Settings size={17} />
-                  Paramètres
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={allerProfil}
+              >
+                <User size={17} />
+                {t("Mon profil")}
+              </button>
 
               <div className="profile-dropdown-separator" />
 
@@ -799,7 +752,7 @@ function Header({
                 onClick={deconnexion}
               >
                 <LogOut size={17} />
-                Déconnexion
+                {t("Déconnexion")}
               </button>
 
             </div>

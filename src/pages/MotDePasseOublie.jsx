@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useLanguage } from "../context/LanguageContext";
 
 import { ArrowLeft, Mail, Send } from "lucide-react";
 
@@ -13,6 +14,7 @@ import api from "../config/apiClient";
  * de réinitialisation (message générique côté serveur).
  */
 function MotDePasseOublie() {
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [chargement, setChargement] = useState(false);
   const [message, setMessage] = useState(null);
@@ -65,14 +67,13 @@ function MotDePasseOublie() {
           <div className="login-card">
             <div className="login-card-header">
               <span className="login-welcome">
-                GAIN OFFICE
+                {t("GAIN OFFICE")}
               </span>
 
-              <h2>Mot de passe oublié</h2>
+              <h2>{t("Mot de passe oublié")}</h2>
 
               <p>
-                Saisissez votre adresse e-mail pour
-                recevoir un lien de réinitialisation.
+                {t("Saisissez votre adresse e-mail pour recevoir un lien de réinitialisation.")}
               </p>
             </div>
 
@@ -82,7 +83,7 @@ function MotDePasseOublie() {
             >
               <div className="login-field">
                 <label htmlFor="email">
-                  Adresse e-mail
+                  {t("Adresse e-mail")}
                 </label>
 
                 <div className="login-input-wrapper">
@@ -98,7 +99,7 @@ function MotDePasseOublie() {
                     onChange={(event) =>
                       setEmail(event.target.value)
                     }
-                    placeholder="exemple@gain.ci"
+                    placeholder={t("exemple@gain.ci")}
                     autoComplete="email"
                     disabled={chargement}
                     className="login-input"
@@ -152,7 +153,7 @@ function MotDePasseOublie() {
                 }}
               >
                 <ArrowLeft size={14} />
-                Retour à la connexion
+                {t("Retour à la connexion")}
               </a>
             </form>
           </div>

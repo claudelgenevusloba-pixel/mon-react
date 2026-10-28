@@ -11,16 +11,17 @@ import {
 } from "react-router-dom";
 
 import { AuthProvider } from "./context/AuthContext";
+import { useLanguage } from "./context/LanguageContext";
 
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Employes from "./pages/Employes";
-import DataTable from "./pages/DataTable";
+import SuiviDemandes from "./pages/SuiviDemandes";
 import Taches from "./pages/Taches";
 import Demandes from "./pages/Demandes";
-import Notifications from "./pages/Notifications";
 import Parametres from "./pages/Parametres";
 import Rapports from "./pages/Rapports";
+import HistoriqueActions from "./pages/HistoriqueActions";
 
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
@@ -47,6 +48,7 @@ import api from "./config/apiClient";
 
 function AccesRefuse() {
   const location = useLocation();
+  const { t } = useLanguage();
 
   return (
     <div className="access-denied-page">
@@ -57,16 +59,15 @@ function AccesRefuse() {
         </div>
 
         <h1>
-          Accès refusé
+          {t("Accès refusé")}
         </h1>
 
         <p>
-          Vous n'avez pas les permissions
-          nécessaires pour accéder à cette page.
+          {t("Vous n'avez pas les permissions nécessaires pour accéder à cette page.")}
         </p>
 
         <small>
-          Page demandée :{" "}
+          {t("Page demandée :")} {" "}
           {location.pathname}
         </small>
 
@@ -129,6 +130,10 @@ function obtenirPremierePageAutorisee(utilisateur) {
       permission: PERMISSIONS.VOIR_EMPLOYES,
     },
     {
+      path: "/historique",
+      permission: PERMISSIONS.VOIR_HISTORIQUE,
+    },
+    {
       path: "/taches",
       permission: PERMISSIONS.VOIR_TACHES,
     },
@@ -137,12 +142,12 @@ function obtenirPremierePageAutorisee(utilisateur) {
       permission: PERMISSIONS.VOIR_DEMANDES,
     },
     {
-      path: "/rapports",
-      permission: PERMISSIONS.VOIR_RAPPORTS,
+      path: "/suivi-demandes",
+      permission: PERMISSIONS.VOIR_DEMANDES,
     },
     {
-      path: "/notifications",
-      permission: PERMISSIONS.VOIR_NOTIFICATIONS,
+      path: "/rapports",
+      permission: PERMISSIONS.VOIR_RAPPORTS,
     },
     {
       path: "/parametres",
@@ -170,6 +175,12 @@ function obtenirPremierePageAutorisee(utilisateur) {
  */
 
 function App() {
+  const {
+    languePourUtilisateur,
+    setLangue,
+    formatDatePourUtilisateur,
+    setFormatDate,
+  } = useLanguage();
 
   const [
     connecte,
@@ -185,6 +196,26 @@ function App() {
     utilisateur,
     setUtilisateur,
   ] = useState(null);
+
+  useEffect(() => {
+    const gererSessionExpiree = () => {
+      setUtilisateur(null);
+      setConnecte(false);
+      setChargement(false);
+    };
+
+    window.addEventListener(
+      "gain-office:session-expired",
+      gererSessionExpiree
+    );
+
+    return () => {
+      window.removeEventListener(
+        "gain-office:session-expired",
+        gererSessionExpiree
+      );
+    };
+  }, []);
 
   /**
    * =======================================================
@@ -288,6 +319,14 @@ function App() {
           poste:
             contexte.poste,
         };
+
+        setLangue(
+          languePourUtilisateur(utilisateurFinal.id_utilisateur || utilisateurFinal.id)
+        );
+        setFormatDate(
+          formatDatePourUtilisateur(utilisateurFinal.id_utilisateur || utilisateurFinal.id),
+          utilisateurFinal.id_utilisateur || utilisateurFinal.id
+        );
 
         setUtilisateur(
           utilisateurFinal
@@ -423,6 +462,14 @@ function App() {
         poste:
           contexte.poste,
       };
+
+      setLangue(
+        languePourUtilisateur(utilisateurFinal.id_utilisateur || utilisateurFinal.id)
+      );
+      setFormatDate(
+        formatDatePourUtilisateur(utilisateurFinal.id_utilisateur || utilisateurFinal.id),
+        utilisateurFinal.id_utilisateur || utilisateurFinal.id
+      );
 
       setUtilisateur(
         utilisateurFinal
@@ -685,22 +732,34 @@ function App() {
                     }
                   />
 
+                  <Route
+                    path="/historique"
+                    element={
+                      <RoutePermission
+                        utilisateur={utilisateur}
+                        permission={PERMISSIONS.VOIR_HISTORIQUE}
+                      >
+                        <HistoriqueActions />
+                      </RoutePermission>
+                    }
+                  />
+
                   {/* =========================================
                       DATA TABLE
                   ========================================= */}
 
                   <Route
-                    path="/data-table"
+                    path="/suivi-demandes"
                     element={
                       <RoutePermission
                         utilisateur={
                           utilisateur
                         }
                         permission={
-                          PERMISSIONS.VOIR_EMPLOYES
+                          PERMISSIONS.VOIR_DEMANDES
                         }
                       >
-                        <DataTable
+                        <SuiviDemandes
                           utilisateur={
                             utilisateur
                           }
@@ -792,30 +851,6 @@ function App() {
                         to="/rapports"
                         replace
                       />
-                    }
-                  />
-
-                  {/* =========================================
-                      NOTIFICATIONS
-                  ========================================= */}
-
-                  <Route
-                    path="/notifications"
-                    element={
-                      <RoutePermission
-                        utilisateur={
-                          utilisateur
-                        }
-                        permission={
-                          PERMISSIONS.VOIR_NOTIFICATIONS
-                        }
-                      >
-                        <Notifications
-                          utilisateur={
-                            utilisateur
-                          }
-                        />
-                      </RoutePermission>
                     }
                   />
 

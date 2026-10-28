@@ -4,6 +4,8 @@ import React, {
   useMemo,
   useState,
 } from "react";
+import { useLanguage } from "../context/LanguageContext";
+import { formaterDateSelonPreference } from "../context/LanguageContext";
 
 import {
   AlertCircle,
@@ -164,11 +166,7 @@ function formaterDate(value) {
     return "—";
   }
 
-  return date.toLocaleDateString("fr-FR", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+  return formaterDateSelonPreference(date);
 }
 
 function formaterDateCourte(value) {
@@ -182,10 +180,7 @@ function formaterDateCourte(value) {
     return "—";
   }
 
-  return date.toLocaleDateString("fr-FR", {
-    day: "2-digit",
-    month: "2-digit",
-  });
+  return formaterDateSelonPreference(date);
 }
 
 function formaterHeure(value) {
@@ -199,7 +194,7 @@ function formaterHeure(value) {
     return "";
   }
 
-  return date.toLocaleTimeString("fr-FR", {
+  return date.toLocaleTimeString(document.documentElement.lang === "en" ? "en-GB" : "fr-FR", {
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -405,6 +400,7 @@ function obtenirIconeNotification(type) {
 ============================================================ */
 
 function Dashboard({ utilisateur: utilisateurProp }) {
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const auth = useAuth();
@@ -447,7 +443,7 @@ function Dashboard({ utilisateur: utilisateurProp }) {
     role === "directeur";
 
   const estResponsable =
-    role === "responsable";
+    role === "responsable" || role === "sous-directeur";
 
   const estRH =
     role === "ressources humaines" ||
@@ -782,12 +778,11 @@ const peutNouvelleDemande =
           </div>
 
           <strong>
-            Chargement du tableau de bord...
+            {t("Chargement du tableau de bord...")}
           </strong>
 
           <span>
-            Récupération des données
-            GAIN OFFICE
+            {t("Récupération des données GAIN OFFICE")}
           </span>
         </section>
       </div>
@@ -808,7 +803,7 @@ const peutNouvelleDemande =
 
           <div>
             <strong>
-              Impossible de charger le dashboard
+              {t("Impossible de charger le dashboard")}
             </strong>
 
             <p>{error}</p>
@@ -821,7 +816,7 @@ const peutNouvelleDemande =
               }
             >
               <RefreshCw size={16} />
-              Réessayer
+              {t("Réessayer")}
             </button>
           </div>
         </section>
@@ -838,20 +833,18 @@ const peutNouvelleDemande =
       <section className="dashboard-welcome">
         <div>
           <span className="dashboard-eyebrow">
-            GAIN OFFICE
+            {t("GAIN OFFICE")}
           </span>
 
           <h1>
-            Bonjour, {nomUtilisateur} 👋
+            {t("Bonjour,")} {nomUtilisateur} 👋
           </h1>
 
-          <p>
-            {titreAccueil}
-          </p>
+          <p>{t(titreAccueil)}</p>
 
           <div className="dashboard-user-context">
             <span>
-              {roleOriginal || "Utilisateur"}
+              {t(roleOriginal || "Utilisateur")}
             </span>
           </div>
         </div>
@@ -861,15 +854,7 @@ const peutNouvelleDemande =
             <CalendarDays size={17} />
 
             <span>
-              {new Date().toLocaleDateString(
-                "fr-FR",
-                {
-                  weekday: "long",
-                  day: "2-digit",
-                  month: "long",
-                  year: "numeric",
-                }
-              )}
+              {formaterDateSelonPreference(new Date())}
             </span>
           </div>
 
@@ -880,7 +865,7 @@ const peutNouvelleDemande =
               chargerDashboard("refresh")
             }
             disabled={refreshing}
-            title="Actualiser"
+            title={t("Actualiser")}
           >
             <RefreshCw
               size={16}
@@ -910,7 +895,7 @@ const peutNouvelleDemande =
               chargerDashboard("refresh")
             }
           >
-            Réessayer
+            {t("Réessayer")}
           </button>
         </div>
       )}
@@ -927,7 +912,7 @@ const peutNouvelleDemande =
             onClick={allerNouvelleTache}
           >
             <Plus size={17} />
-            Nouvelle tâche
+            {t("Nouvelle tâche")}
           </button>
         )}
 
@@ -938,7 +923,7 @@ const peutNouvelleDemande =
             onClick={allerNouvelleDemande}
           >
             <FilePlus size={17} />
-            Nouvelle demande
+            {t("Nouvelle demande")}
           </button>
         )}
 
@@ -949,7 +934,7 @@ const peutNouvelleDemande =
             onClick={allerEmployes}
           >
             <UserPlus size={17} />
-            Gérer les employés
+            {t("Gérer les employés")}
           </button>
         )}
 
@@ -960,7 +945,7 @@ const peutNouvelleDemande =
             onClick={allerDemandes}
           >
             <FileText size={17} />
-            Voir les demandes
+            {t("Voir les demandes")}
           </button>
         )}
 
@@ -971,7 +956,7 @@ const peutNouvelleDemande =
             onClick={allerRapports}
           >
             <ClipboardList size={17} />
-            Rapports
+            {t("Rapports")}
           </button>
         )}
       </section>
@@ -1007,12 +992,12 @@ const peutNouvelleDemande =
               </div>
 
               <span className="dashboard-stat-badge positive">
-                Actifs
+                {t("Actifs")}
               </span>
             </div>
 
             <div className="dashboard-stat-content">
-              <span>Employés</span>
+              <span>{t("Employés")}</span>
 
               <strong>
                 {formaterNombre(
@@ -1024,14 +1009,14 @@ const peutNouvelleDemande =
                 {formaterNombre(
                   employesTotal
                 )}{" "}
-                employés au total
+                {t("employés au total")}
               </small>
             </div>
 
             <div className="dashboard-stat-footer">
               <Users size={13} />
               <span>
-                Effectif actuel
+                {t("Effectif actuel")}
               </span>
 
               <ArrowRight size={13} />
@@ -1064,12 +1049,12 @@ const peutNouvelleDemande =
               {formaterNombre(
                 tachesEnCours
               )}{" "}
-              en cours
+              {t("en cours")}
             </span>
           </div>
 
           <div className="dashboard-stat-content">
-            <span>Tâches</span>
+            <span>{t("Tâches")}</span>
 
             <strong>
               {formaterNombre(
@@ -1081,7 +1066,7 @@ const peutNouvelleDemande =
               {formaterNombre(
                 tachesTerminees
               )}{" "}
-              terminées
+              {t("terminées")}
             </small>
           </div>
 
@@ -1091,7 +1076,7 @@ const peutNouvelleDemande =
               {formaterNombre(
                 tachesEnCours
               )}{" "}
-              en cours
+              {t("en cours")}
             </span>
 
             <ArrowRight size={13} />
@@ -1123,12 +1108,12 @@ const peutNouvelleDemande =
               {formaterNombre(
                 demandesEnAttente
               )}{" "}
-              en attente
+              {t("en attente")}
             </span>
           </div>
 
           <div className="dashboard-stat-content">
-            <span>Demandes</span>
+            <span>{t("Demandes")}</span>
 
             <strong>
               {formaterNombre(
@@ -1140,7 +1125,7 @@ const peutNouvelleDemande =
               {formaterNombre(
                 demandesAcceptees
               )}{" "}
-              validées
+              {t("validées")}
             </small>
           </div>
 
@@ -1150,7 +1135,7 @@ const peutNouvelleDemande =
               {formaterNombre(
                 demandesEnAttente
               )}{" "}
-              à traiter
+              {t("à traiter")}
             </span>
 
             <ArrowRight size={13} />
@@ -1172,13 +1157,13 @@ const peutNouvelleDemande =
 
             <span className="dashboard-stat-badge positive">
               <ArrowUpRight size={12} />
-              Progression
+              {t("Progression")}
             </span>
           </div>
 
           <div className="dashboard-stat-content">
             <span>
-              Avancement
+              {t("Avancement")}
             </span>
 
             <strong>
@@ -1201,7 +1186,7 @@ const peutNouvelleDemande =
               {formaterNombre(
                 tachesTerminees
               )}{" "}
-              tâches terminées
+              {t("tâches terminées")}
             </span>
           </div>
         </article>
@@ -1217,11 +1202,11 @@ const peutNouvelleDemande =
           <div className="dashboard-section-title">
             <div>
               <h2>
-                Progression des tâches
+                {t("Progression des tâches")}
               </h2>
 
               <p>
-                Suivi global des activités
+                {t("Suivi global des activités")}
               </p>
             </div>
 
@@ -1247,7 +1232,7 @@ const peutNouvelleDemande =
               </strong>
 
               <span>
-                Terminées
+                {t("Terminées")}
               </span>
             </div>
 
@@ -1259,7 +1244,7 @@ const peutNouvelleDemande =
               </strong>
 
               <span>
-                En cours
+                {t("En cours")}
               </span>
             </div>
 
@@ -1271,7 +1256,7 @@ const peutNouvelleDemande =
               </strong>
 
               <span>
-                En retard
+                {t("En retard")}
               </span>
             </div>
           </div>
@@ -1281,23 +1266,23 @@ const peutNouvelleDemande =
           <div className="dashboard-section-title">
             <div>
               <h2>
-                Suivi des demandes
+                {t("Suivi des demandes")}
               </h2>
 
               <p>
-                État du traitement
+                {t("État du traitement")}
               </p>
             </div>
 
             <span className="dashboard-stat-badge orange">
-              {tauxDemandes}% validées
+              {tauxDemandes}{t("% validées")}
             </span>
           </div>
 
           <div className="dashboard-demand-bars">
             <div>
               <span>
-                En attente
+                {t("En attente")}
               </span>
 
               <strong>
@@ -1326,7 +1311,7 @@ const peutNouvelleDemande =
 
             <div>
               <span>
-                Acceptées
+                {t("Acceptées")}
               </span>
 
               <strong>
@@ -1355,7 +1340,7 @@ const peutNouvelleDemande =
 
             <div>
               <span>
-                Refusées
+                {t("Refusées")}
               </span>
 
               <strong>
@@ -1398,11 +1383,11 @@ const peutNouvelleDemande =
           <div className="dashboard-panel-header">
             <div>
               <span className="dashboard-panel-kicker">
-                TÂCHES
+                {t("TÂCHES")}
               </span>
 
               <h2>
-                Tâches récentes
+                {t("Tâches récentes")}
               </h2>
             </div>
 
@@ -1411,7 +1396,7 @@ const peutNouvelleDemande =
               className="dashboard-panel-link"
               onClick={allerTaches}
             >
-              Voir tout
+              {t("Voir tout")}
               <ArrowRight size={14} />
             </button>
           </div>
@@ -1421,12 +1406,11 @@ const peutNouvelleDemande =
               <ClipboardList size={28} />
 
               <strong>
-                Aucune tâche
+                {t("Aucune tâche")}
               </strong>
 
               <span>
-                Aucune tâche à afficher
-                pour votre espace.
+                {t("Aucune tâche à afficher pour votre espace.")}
               </span>
 
               {peutNouvelleTache && (
@@ -1437,7 +1421,7 @@ const peutNouvelleDemande =
                   }
                 >
                   <Plus size={15} />
-                  Créer une tâche
+                  {t("Créer une tâche")}
                 </button>
               )}
             </div>
@@ -1469,8 +1453,7 @@ const peutNouvelleDemande =
                             tache.priorite
                           )}
                         >
-                          {tache.priorite ||
-                            "Normale"}
+                          {t(tache.priorite || "Normale")}
                         </span>
 
                       </div>
@@ -1486,7 +1469,7 @@ const peutNouvelleDemande =
                             ]
                               .filter(Boolean)
                               .join(" ")}`
-                          : "Non assignée"}
+                          : t("Non assignée")}
                       </span>
 
                     </div>
@@ -1498,10 +1481,8 @@ const peutNouvelleDemande =
                           tache.statut
                         )}
                       >
-                        {tache.statut_libelle ||
-                          obtenirTexteStatut(
-                            tache.statut
-                          )}
+                        {t(tache.statut_libelle ||
+                          obtenirTexteStatut(tache.statut))}
                       </span>
 
                       <small>
@@ -1528,11 +1509,11 @@ const peutNouvelleDemande =
           <div className="dashboard-panel-header">
             <div>
               <span className="dashboard-panel-kicker">
-                ACTIVITÉ
+                {t("ACTIVITÉ")}
               </span>
 
               <h2>
-                Activité récente
+                {t("Activité récente")}
               </h2>
             </div>
           </div>
@@ -1543,12 +1524,11 @@ const peutNouvelleDemande =
               <CheckCircle2 size={25} />
 
               <strong>
-                Aucune activité récente
+                {t("Aucune activité récente")}
               </strong>
 
               <span>
-                Les nouvelles activités
-                apparaîtront ici.
+                {t("Les nouvelles activités apparaîtront ici.")}
               </span>
 
             </div>
@@ -1624,11 +1604,11 @@ const peutNouvelleDemande =
 
             <div>
               <span className="dashboard-panel-kicker">
-                DEMANDES
+                {t("DEMANDES")}
               </span>
 
               <h2>
-                Dernières demandes
+                {t("Dernières demandes")}
               </h2>
             </div>
 
@@ -1637,7 +1617,7 @@ const peutNouvelleDemande =
               className="dashboard-panel-link"
               onClick={allerDemandes}
             >
-              Voir tout
+              {t("Voir tout")}
               <ArrowRight size={14} />
             </button>
 
@@ -1649,11 +1629,11 @@ const peutNouvelleDemande =
               <FileText size={25} />
 
               <strong>
-                Aucune demande
+                {t("Aucune demande")}
               </strong>
 
               <span>
-                Aucune demande enregistrée.
+                {t("Aucune demande enregistrée.")}
               </span>
 
               {peutNouvelleDemande && (
@@ -1664,7 +1644,7 @@ const peutNouvelleDemande =
                   }
                 >
                   <FilePlus size={15} />
-                  Faire une demande
+                  {t("Faire une demande")}
                 </button>
               )}
 
@@ -1701,9 +1681,7 @@ const peutNouvelleDemande =
                     <div className="dashboard-request-info">
 
                       <strong>
-                        {demande.type_libelle ||
-                          demande.type_demande ||
-                          "Demande"}
+                        {t(demande.type_libelle || demande.type_demande || "Demande")}
                       </strong>
 
                       <span>
@@ -1719,10 +1697,8 @@ const peutNouvelleDemande =
                         demande.statut
                       )}
                     >
-                      {demande.statut_libelle ||
-                        obtenirTexteStatut(
-                          demande.statut
-                        )}
+                      {t(demande.statut_libelle ||
+                        obtenirTexteStatut(demande.statut))}
                     </span>
 
                   </div>
@@ -1742,11 +1718,11 @@ const peutNouvelleDemande =
 
             <div>
               <span className="dashboard-panel-kicker">
-                NOTIFICATIONS
+                {t("NOTIFICATIONS")}
               </span>
 
               <h2>
-                À ne pas manquer
+                {t("À ne pas manquer")}
               </h2>
             </div>
 
@@ -1754,7 +1730,7 @@ const peutNouvelleDemande =
 
               {notificationNonLues > 0 && (
                 <span className="dashboard-unread-count">
-                  {notificationNonLues} non lue
+                  {notificationNonLues} {t("non lue")}
                   {notificationNonLues > 1
                     ? "s"
                     : ""}
@@ -1768,7 +1744,7 @@ const peutNouvelleDemande =
                   allerNotifications
                 }
               >
-                Voir tout
+                {t("Voir tout")}
               </button>
 
             </div>
@@ -1781,11 +1757,11 @@ const peutNouvelleDemande =
               <Bell size={25} />
 
               <strong>
-                Aucune notification
+                {t("Aucune notification")}
               </strong>
 
               <span>
-                Vous êtes à jour.
+                {t("Vous êtes à jour.")}
               </span>
 
             </div>
@@ -1870,7 +1846,7 @@ const peutNouvelleDemande =
 
           <div>
             <span>
-              Tâches terminées
+              {t("Tâches terminées")}
             </span>
 
             <strong>
@@ -1890,7 +1866,7 @@ const peutNouvelleDemande =
 
           <div>
             <span>
-              Tâches en retard
+              {t("Tâches en retard")}
             </span>
 
             <strong>
@@ -1910,7 +1886,7 @@ const peutNouvelleDemande =
 
           <div>
             <span>
-              Demandes acceptées
+              {t("Demandes acceptées")}
             </span>
 
             <strong>
@@ -1930,7 +1906,7 @@ const peutNouvelleDemande =
 
           <div>
             <span>
-              Demandes refusées
+              {t("Demandes refusées")}
             </span>
 
             <strong>
@@ -1958,14 +1934,11 @@ const peutNouvelleDemande =
 
           <div>
             <strong>
-              GAIN OFFICE
+              {t("GAIN OFFICE")}
             </strong>
 
             <p>
-              Plateforme interne de gestion
-              des collaborateurs, tâches,
-              demandes et activités de
-              Groupe GAIN SARL.
+              {t("Plateforme interne de gestion des collaborateurs, tâches, demandes et activités de Groupe GAIN SARL.")}
             </p>
           </div>
 
@@ -1979,14 +1952,11 @@ const peutNouvelleDemande =
 
           <div>
             <strong>
-              Système opérationnel
+              {t("Système opérationnel")}
             </strong>
 
             <p>
-              Les informations affichées
-              proviennent du système
-              GAIN OFFICE et de votre API
-              Laravel.
+              {t("Les informations affichées proviennent du système GAIN OFFICE et de votre API Laravel.")}
             </p>
           </div>
 
@@ -2000,13 +1970,11 @@ const peutNouvelleDemande =
 
           <div>
             <strong>
-              Suivi en temps réel
+              {t("Suivi en temps réel")}
             </strong>
 
             <p>
-              Le tableau de bord est
-              automatiquement actualisé
-              toutes les 60 secondes.
+              {t("Le tableau de bord est automatiquement actualisé toutes les 60 secondes.")}
             </p>
           </div>
 

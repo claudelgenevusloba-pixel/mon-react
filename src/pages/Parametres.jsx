@@ -18,6 +18,7 @@ import { PERMISSIONS } from "../config/permissions";
 import { aPermission, getRole } from "../config/access";
 import { ROLES } from "../config/roles";
 import { useAuth } from "../context/AuthContext";
+import { useLanguage } from "../context/LanguageContext";
 
 import "../styles/pages/parametres.css";
 
@@ -73,6 +74,7 @@ function Parametres({ utilisateur }) {
     role === ROLES.ADMINISTRATEUR;
 
   const { setUtilisateur } = useAuth();
+  const { t, setLangue, setFormatDate } = useLanguage();
 
   const [onglet, setOnglet] = useState("profil");
 
@@ -83,9 +85,10 @@ function Parametres({ utilisateur }) {
       );
 
       if (sauvegarde) {
+        const preferencesSauvegardees = JSON.parse(sauvegarde);
         return {
           ...PARAMETRES_PAR_DEFAUT,
-          ...JSON.parse(sauvegarde),
+          ...preferencesSauvegardees,
         };
       }
     } catch (error) {
@@ -169,6 +172,20 @@ function Parametres({ utilisateur }) {
 
   useEffect(() => {
     try {
+      const preferences = JSON.parse(
+        localStorage.getItem(
+          `gainOfficeParametres_${idUtilisateur}`
+        ) || "{}"
+      );
+      setLangue(
+        preferences.langue || PARAMETRES_PAR_DEFAUT.langue,
+        idUtilisateur
+      );
+      setFormatDate(
+        preferences.formatDate || PARAMETRES_PAR_DEFAUT.formatDate,
+        idUtilisateur
+      );
+
       const sauvegardeProfil = localStorage.getItem(
         `gainOfficeProfil_${idUtilisateur}`
       );
@@ -197,7 +214,7 @@ function Parametres({ utilisateur }) {
         error
       );
     }
-  }, [idUtilisateur]);
+  }, [idUtilisateur, setLangue, setFormatDate]);
 
   useEffect(() => {
     setProfil((ancien) => ({
@@ -247,6 +264,13 @@ function Parametres({ utilisateur }) {
       ...ancien,
       [champ]: valeur,
     }));
+
+    if (champ === "langue") {
+      setLangue(valeur, idUtilisateur);
+    }
+    if (champ === "formatDate") {
+      setFormatDate(valeur, idUtilisateur);
+    }
   };
 
   const sauvegarderParametres = () => {
@@ -256,14 +280,17 @@ function Parametres({ utilisateur }) {
         JSON.stringify(parametres)
       );
 
+      setLangue(parametres.langue, idUtilisateur);
+      setFormatDate(parametres.formatDate, idUtilisateur);
+
       afficherMessage(
-        "Vos préférences ont été enregistrées."
+        t("Vos préférences ont été enregistrées.")
       );
     } catch (error) {
       console.error(error);
 
       afficherMessage(
-        "Impossible d'enregistrer vos préférences.",
+        t("Impossible d'enregistrer vos préférences."),
         "error"
       );
     }
@@ -585,7 +612,7 @@ function Parametres({ utilisateur }) {
 
   const reinitialiserParametres = () => {
     const confirmation = window.confirm(
-      "Voulez-vous vraiment réinitialiser vos préférences personnelles ?"
+      t("Voulez-vous vraiment réinitialiser vos préférences personnelles ?")
     );
 
     if (!confirmation) {
@@ -602,14 +629,17 @@ function Parametres({ utilisateur }) {
         JSON.stringify(PARAMETRES_PAR_DEFAUT)
       );
 
+      setLangue(PARAMETRES_PAR_DEFAUT.langue, idUtilisateur);
+      setFormatDate(PARAMETRES_PAR_DEFAUT.formatDate, idUtilisateur);
+
       afficherMessage(
-        "Vos préférences ont été réinitialisées."
+        t("Vos préférences ont été réinitialisées.")
       );
     } catch (error) {
       console.error(error);
 
       afficherMessage(
-        "Impossible de réinitialiser les préférences.",
+        t("Impossible de réinitialiser les préférences."),
         "error"
       );
     }
@@ -659,11 +689,10 @@ function Parametres({ utilisateur }) {
             </div>
 
             <div>
-              <h2>Accès refusé</h2>
+              <h2>{t("Accès refusé")}</h2>
 
               <p>
-                Vous n'avez pas l'autorisation
-                d'accéder aux paramètres.
+                {t("Vous n'avez pas l'autorisation d'accéder aux paramètres.")}
               </p>
             </div>
           </div>
@@ -679,16 +708,15 @@ function Parametres({ utilisateur }) {
         <div>
 
           <div className="settings-breadcrumb">
-            <span>GAIN OFFICE</span>
+            <span>{t("GAIN OFFICE")}</span>
             <span>/</span>
-            <strong>Paramètres</strong>
+            <strong>{t("Paramètres")}</strong>
           </div>
 
-          <h1>Paramètres</h1>
+          <h1>{t("Paramètres")}</h1>
 
           <p>
-            Gérez votre profil, votre sécurité et
-            vos préférences personnelles.
+            {t("Gérez votre profil, votre sécurité et vos préférences personnelles.")}
           </p>
 
         </div>
@@ -699,7 +727,7 @@ function Parametres({ utilisateur }) {
             onClick={sauvegarderParametres}
           >
             <Save size={18} />
-            Enregistrer
+            {t("Enregistrer")}
           </button>
         )}
 
@@ -724,7 +752,7 @@ function Parametres({ utilisateur }) {
         <aside className="settings-sidebar">
 
           <div className="settings-sidebar-title">
-            PARAMÈTRES
+            {t("PARAMÈTRES")}
           </div>
 
           <nav>
@@ -748,7 +776,7 @@ function Parametres({ utilisateur }) {
                   }
                 >
                   <Icon size={18} />
-                  <span>{item.label}</span>
+                  <span>{t(item.label)}</span>
                 </button>
               );
             })}
@@ -760,7 +788,7 @@ function Parametres({ utilisateur }) {
             className="settings-reset-button"
             onClick={reinitialiserParametres}
           >
-            Réinitialiser mes préférences
+            {t("Réinitialiser mes préférences")}
           </button>
 
         </aside>
@@ -777,11 +805,10 @@ function Parametres({ utilisateur }) {
                 </div>
 
                 <div>
-                  <h2>Mon profil</h2>
+                  <h2>{t("Mon profil")}</h2>
 
                   <p>
-                    Gérez les informations
-                    associées à votre compte.
+                    {t("Gérez les informations associées à votre compte.")}
                   </p>
                 </div>
 
@@ -814,7 +841,7 @@ function Parametres({ utilisateur }) {
                 <div className="settings-field">
 
                   <label>
-                    Nom complet
+                    {t("Nom complet")}
                   </label>
 
                   <input
@@ -833,12 +860,12 @@ function Parametres({ utilisateur }) {
                 <div className="settings-field">
 
                   <label>
-                    Prénom
+                    {t("Prénom")}
                   </label>
 
                   <input
                     type="text"
-                    placeholder="Ex. Jean"
+                    placeholder={t("Ex. Jean")}
                     value={profil.prenom}
                     onChange={(e) =>
                       setProfil({
@@ -853,7 +880,7 @@ function Parametres({ utilisateur }) {
                 <div className="settings-field">
 
                   <label>
-                    Adresse e-mail
+                    {t("Adresse e-mail")}
                   </label>
 
                   <input
@@ -872,12 +899,12 @@ function Parametres({ utilisateur }) {
                 <div className="settings-field">
 
                   <label>
-                    Téléphone
+                    {t("Téléphone")}
                   </label>
 
                   <input
                     type="text"
-                    placeholder="Ex. 07 00 00 00 00"
+                    placeholder={t("Ex. 07 00 00 00 00")}
                     value={profil.telephone}
                     onChange={(e) =>
                       setProfil({
@@ -892,7 +919,7 @@ function Parametres({ utilisateur }) {
                 <div className="settings-field">
 
                   <label>
-                    Fonction
+                    {t("Fonction")}
                   </label>
 
                   <input
@@ -913,7 +940,7 @@ function Parametres({ utilisateur }) {
                   onClick={sauvegarderProfil}
                 >
                   <Save size={17} />
-                  Enregistrer le profil
+                  {t("Enregistrer le profil")}
                 </button>
 
               </div>
@@ -931,11 +958,10 @@ function Parametres({ utilisateur }) {
                 </div>
 
                 <div>
-                  <h2>Sécurité</h2>
+                  <h2>{t("Sécurité")}</h2>
 
                   <p>
-                    Protégez votre compte et
-                    gérez votre mot de passe.
+                    {t("Protégez votre compte et gérez votre mot de passe.")}
                   </p>
                 </div>
 
@@ -948,13 +974,11 @@ function Parametres({ utilisateur }) {
                 <div>
 
                   <strong>
-                    Sécurité du compte
+                    {t("Sécurité du compte")}
                   </strong>
 
                   <p>
-                    Votre mot de passe doit être
-                    suffisamment long et difficile
-                    à deviner.
+                    {t("Votre mot de passe doit être suffisamment long et difficile à deviner.")}
                   </p>
 
                 </div>
@@ -966,7 +990,7 @@ function Parametres({ utilisateur }) {
                 <div className="settings-field">
 
                   <label>
-                    Mot de passe actuel
+                    {t("Mot de passe actuel")}
                   </label>
 
                   <div className="password-input">
@@ -1009,7 +1033,7 @@ function Parametres({ utilisateur }) {
                 <div className="settings-field">
 
                   <label>
-                    Nouveau mot de passe
+                    {t("Nouveau mot de passe")}
                   </label>
 
                   <div className="password-input">
@@ -1052,8 +1076,7 @@ function Parametres({ utilisateur }) {
                 <div className="settings-field">
 
                   <label>
-                    Confirmer le nouveau
-                    mot de passe
+                    {t("Confirmer le nouveau mot de passe")}
                   </label>
 
                   <div className="password-input">
@@ -1108,8 +1131,8 @@ function Parametres({ utilisateur }) {
                   <Lock size={17} />
 
                   {chargementMotDePasse
-                    ? "Modification..."
-                    : "Modifier le mot de passe"}
+                    ? t("Modification...")
+                    : t("Modifier le mot de passe")}
                 </button>
 
               </div>
@@ -1126,11 +1149,10 @@ function Parametres({ utilisateur }) {
                 </div>
 
                 <div>
-                  <h2>Notifications</h2>
+                  <h2>{t("Notifications")}</h2>
 
                   <p>
-                    Choisissez les notifications
-                    que vous souhaitez recevoir.
+                    {t("Choisissez les notifications que vous souhaitez recevoir.")}
                   </p>
                 </div>
 
@@ -1142,12 +1164,11 @@ function Parametres({ utilisateur }) {
 
                   <div>
                     <strong>
-                      Notifications par e-mail
+                      {t("Notifications par e-mail")}
                     </strong>
 
                     <span>
-                      Recevoir les notifications
-                      importantes par e-mail.
+                      {t("Recevoir les notifications importantes par e-mail.")}
                     </span>
                   </div>
 
@@ -1176,13 +1197,11 @@ function Parametres({ utilisateur }) {
 
                   <div>
                     <strong>
-                      Notifications de
-                      l'application
+                      {t("Notifications de l'application")}
                     </strong>
 
                     <span>
-                      Afficher les notifications
-                      directement dans GAIN OFFICE.
+                      {t("Afficher les notifications directement dans GAIN OFFICE.")}
                     </span>
                   </div>
 
@@ -1211,12 +1230,11 @@ function Parametres({ utilisateur }) {
 
                   <div>
                     <strong>
-                      Notifications des tâches
+                      {t("Notifications des tâches")}
                     </strong>
 
                     <span>
-                      Recevoir les changements
-                      concernant vos tâches.
+                      {t("Recevoir les changements concernant vos tâches.")}
                     </span>
                   </div>
 
@@ -1245,12 +1263,11 @@ function Parametres({ utilisateur }) {
 
                   <div>
                     <strong>
-                      Notifications des demandes
+                      {t("Notifications des demandes")}
                     </strong>
 
                     <span>
-                      Ître informé des nouvelles
-                      demandes et décisions.
+                      {t("Être informé des nouvelles demandes et décisions.")}
                     </span>
                   </div>
 
@@ -1279,12 +1296,11 @@ function Parametres({ utilisateur }) {
 
                   <div>
                     <strong>
-                      Notifications des messages
+                      {t("Notifications des messages")}
                     </strong>
 
                     <span>
-                      Recevoir les notifications
-                      lorsqu'un message est reçu.
+                      {t("Recevoir les notifications lorsqu'un message est reçu.")}
                     </span>
                   </div>
 
@@ -1319,7 +1335,7 @@ function Parametres({ utilisateur }) {
                   onClick={sauvegarderParametres}
                 >
                   <Save size={17} />
-                  Enregistrer les préférences
+                  {t("Enregistrer les préférences")}
                 </button>
 
               </div>
@@ -1337,11 +1353,10 @@ function Parametres({ utilisateur }) {
                 </div>
 
                 <div>
-                  <h2>Préférences</h2>
+                  <h2>{t("Préférences")}</h2>
 
                   <p>
-                    Personnalisez vos préférences
-                    personnelles dans GAIN OFFICE.
+                    {t("Personnalisez vos préférences personnelles dans GAIN OFFICE.")}
                   </p>
                 </div>
 
@@ -1352,7 +1367,7 @@ function Parametres({ utilisateur }) {
                 <div className="settings-field">
 
                   <label>
-                    Langue
+                    {t("Langue")}
                   </label>
 
                   <select
@@ -1365,11 +1380,11 @@ function Parametres({ utilisateur }) {
                     }
                   >
                     <option value="Français">
-                      Français
+                      {t("Français")}
                     </option>
 
                     <option value="English">
-                      English
+                      {t("English")}
                     </option>
                   </select>
 
@@ -1378,7 +1393,7 @@ function Parametres({ utilisateur }) {
                 <div className="settings-field">
 
                   <label>
-                    Format de date
+                    {t("Format de date")}
                   </label>
 
                   <select
@@ -1393,15 +1408,15 @@ function Parametres({ utilisateur }) {
                     }
                   >
                     <option value="DD/MM/YYYY">
-                      DD/MM/YYYY
+                      {t("DD/MM/YYYY")}
                     </option>
 
                     <option value="MM/DD/YYYY">
-                      MM/DD/YYYY
+                      {t("MM/DD/YYYY")}
                     </option>
 
                     <option value="YYYY-MM-DD">
-                      YYYY-MM-DD
+                      {t("YYYY-MM-DD")}
                     </option>
                   </select>
 
@@ -1415,13 +1430,11 @@ function Parametres({ utilisateur }) {
 
                   <div>
                     <strong>
-                      Afficher ma photo
+                      {t("Afficher ma photo")}
                     </strong>
 
                     <span>
-                      Autoriser l'affichage de
-                      votre avatar dans votre
-                      espace personnel.
+                      {t("Autoriser l'affichage de votre avatar dans votre espace personnel.")}
                     </span>
                   </div>
 
@@ -1456,7 +1469,7 @@ function Parametres({ utilisateur }) {
                   onClick={sauvegarderParametres}
                 >
                   <Save size={17} />
-                  Enregistrer mes préférences
+                  {t("Enregistrer mes préférences")}
                 </button>
 
               </div>
@@ -1474,11 +1487,10 @@ function Parametres({ utilisateur }) {
                   </div>
 
                   <div>
-                    <h2>Entreprise</h2>
+                    <h2>{t("Entreprise")}</h2>
 
                     <p>
-                      Gérez les informations
-                      générales de Groupe GAIN SARL.
+                      {t("Gérez les informations générales de Groupe GAIN SARL.")}
                     </p>
                   </div>
 
@@ -1489,7 +1501,7 @@ function Parametres({ utilisateur }) {
                   <div className="settings-field">
 
                     <label>
-                      Nom de l'entreprise
+                      {t("Nom de l'entreprise")}
                     </label>
 
                     <input
@@ -1508,7 +1520,7 @@ function Parametres({ utilisateur }) {
                   <div className="settings-field">
 
                     <label>
-                      E-mail
+                      {t("E-mail")}
                     </label>
 
                     <input
@@ -1527,7 +1539,7 @@ function Parametres({ utilisateur }) {
                   <div className="settings-field">
 
                     <label>
-                      Téléphone
+                      {t("Téléphone")}
                     </label>
 
                     <input
@@ -1549,7 +1561,7 @@ function Parametres({ utilisateur }) {
                   <div className="settings-field">
 
                     <label>
-                      Adresse
+                      {t("Adresse")}
                     </label>
 
                     <input
@@ -1580,7 +1592,7 @@ function Parametres({ utilisateur }) {
                     }
                   >
                     <Save size={17} />
-                    Enregistrer l'entreprise
+                    {t("Enregistrer l'entreprise")}
                   </button>
 
                 </div>
@@ -1603,12 +1615,10 @@ function Parametres({ utilisateur }) {
                   </div>
 
                   <div>
-                    <h2>Rapports périodiques</h2>
+                    <h2>{t("Rapports périodiques")}</h2>
 
                     <p>
-                      Périodicité, échéances, rappels
-                      et circuit de validation des
-                      rapports.
+                      {t("Périodicité, échéances, rappels et circuit de validation des rapports.")}
                     </p>
                   </div>
 
@@ -1619,7 +1629,7 @@ function Parametres({ utilisateur }) {
                   <div className="settings-field">
 
                     <label>
-                      Périodicité des rapports
+                      {t("Périodicité des rapports")}
                     </label>
 
                     <select
@@ -1635,19 +1645,19 @@ function Parametres({ utilisateur }) {
                       }
                     >
                       <option value="">
-                        Non définie (aucune imposée)
+                        {t("Non définie (aucune imposée)")}
                       </option>
 
                       <option value="quotidienne">
-                        Quotidienne
+                        {t("Quotidienne")}
                       </option>
 
                       <option value="hebdomadaire">
-                        Hebdomadaire
+                        {t("Hebdomadaire")}
                       </option>
 
                       <option value="mensuelle">
-                        Mensuelle
+                        {t("Mensuelle")}
                       </option>
 
                     </select>
@@ -1657,8 +1667,7 @@ function Parametres({ utilisateur }) {
                   <div className="settings-field">
 
                     <label>
-                      Délai de soumission (jours après
-                      la fin de période)
+                      {t("Délai de soumission (jours après la fin de période)")}
                     </label>
 
                     <input
@@ -1675,7 +1684,7 @@ function Parametres({ utilisateur }) {
                             e.target.value,
                         })
                       }
-                      placeholder="Ex. : 2"
+                      placeholder={t("Ex. : 2")}
                     />
 
                   </div>
@@ -1683,7 +1692,7 @@ function Parametres({ utilisateur }) {
                   <div className="settings-field">
 
                     <label>
-                      Niveaux de validation
+                      {t("Niveaux de validation")}
                     </label>
 
                     <select
@@ -1699,15 +1708,15 @@ function Parametres({ utilisateur }) {
                       }
                     >
                       <option value="1">
-                        1 "” Superior direct uniquement
+                        {t("1 \"” Superior direct uniquement")}
                       </option>
 
                       <option value="2">
-                        2 "” Supérieur direct + niveau suivant
+                        {t("2 \"” Supérieur direct + niveau suivant")}
                       </option>
 
                       <option value="3">
-                        3 niveaux
+                        {t("3 niveaux")}
                       </option>
 
                     </select>
@@ -1717,7 +1726,7 @@ function Parametres({ utilisateur }) {
                   <div className="settings-field">
 
                     <label>
-                      Rappels d'échéance
+                      {t("Rappels d'échéance")}
                     </label>
 
                     <label
@@ -1742,7 +1751,7 @@ function Parametres({ utilisateur }) {
                         }
                       />
 
-                      Notifier les rapports en retard
+                      {t("Notifier les rapports en retard")}
                     </label>
 
                   </div>
@@ -1757,7 +1766,7 @@ function Parametres({ utilisateur }) {
                     onClick={sauvegarderRapports}
                   >
                     <Save size={17} />
-                    Enregistrer la configuration
+                    {t("Enregistrer la configuration")}
                   </button>
 
                 </div>
