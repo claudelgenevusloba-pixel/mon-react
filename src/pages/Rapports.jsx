@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
-import { useLanguage } from "../context/LanguageContext";
-import { formaterDateSelonPreference } from "../context/LanguageContext";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  formaterDateSelonPreference,
+  useLanguage,
+} from "../context/LanguageContext";
 
 import {
   FileText,
@@ -13,6 +15,9 @@ import {
   BarChart3,
   ShieldCheck,
   UserPlus,
+  Paperclip,
+  Download,
+  X,
 } from "lucide-react";
 
 import "../styles/pages/rapports.css";
@@ -24,7 +29,7 @@ import {
 } from "../config/access";
 import { ROLES } from "../config/roles";
 
-import apiClient from "../config/apiClient";
+import { rapportService } from "../services/rapportService";
 
 function Rapports({ utilisateur }) {
   const { t } = useLanguage();
@@ -35,6 +40,9 @@ function Rapports({ utilisateur }) {
   const [recherche, setRecherche] = useState("");
   const [rapportSelectionne, setRapportSelectionne] =
     useState(null);
+  const [fichiers, setFichiers] = useState([]);
+  const [erreurFichiers, setErreurFichiers] = useState("");
+  const [pieceTelechargement, setPieceTelechargement] = useState(null);
 
   /*
    * Nouveau rapport périodique (autonome ou lié à une tâche).
@@ -75,16 +83,6 @@ function Rapports({ utilisateur }) {
     PERMISSIONS.CREER_RAPPORT
   );
 
-  const peutModifierRapport = aPermission(
-    utilisateur,
-    PERMISSIONS.MODIFIER_RAPPORT
-  );
-
-  const peutSupprimerRapport = aPermission(
-    utilisateur,
-    PERMISSIONS.SUPPRIMER_RAPPORT
-  );
-
   const peutValiderRapport = aPermission(
     utilisateur,
     PERMISSIONS.VALIDER_RAPPORT
@@ -101,8 +99,74 @@ function Rapports({ utilisateur }) {
    * Il ne produit pas de rapport.
    */
   const peutProduireRapport =
-    peutCreerRapport &&
-    role !== ROLES.DIRECTEUR;
+    peutCreerRapport && role !== ROLES.DIRECTEUR;
+
+  const ajouterFichiers = (event) => {
+    const selection = Array.from(event.target.files || []);
+    event.target.value = "";
+    if (selection.length === 0) return;
+
+    const typesAutorises = new Set([
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ]);
+    const fichierInvalide = selection.find(
+      (fichier) => !typesAutorises.has(fichier.type) || fichier.size > 2 * 1024 * 1024,
+    );
+
+    if (fichierInvalide) {
+      setErreurFichiers(
+        fichierInvalide.size > 2 * 1024 * 1024
+          ? t("Chaque pièce jointe doit faire 2 Mo maximum.")
+          : t("Formats acceptés : JPG, PNG, WebP, PDF, DOC et DOCX."),
+      );
+      return;
+    }
+
+    setErreurFichiers("");
+    const uniques = [...fichiers];
+    selection.forEach((fichier) => {
+      if (!uniques.some((element) => element.name === fichier.name && element.size === fichier.size)) {
+        uniques.push(fichier);
+      }
+    });
+    if (uniques.length > 3) {
+      setErreurFichiers(t("Vous pouvez joindre au maximum 3 fichiers."));
+    }
+    setFichiers(uniques.slice(0, 3));
+  };
+
+  const retirerFichier = (fichierRetire) => {
+    setFichiers((actuels) => actuels.filter((fichier) => fichier !== fichierRetire));
+  };
+
+  const telechargerPieceJointe = async (piece) => {
+    if (!rapportSelectionne || !piece?.id_piece) return;
+
+    setPieceTelechargement(piece.id_piece);
+    try {
+      const response = await rapportService.telechargerPieceJointe(
+        rapportSelectionne.id_rapport,
+        piece.id_piece,
+      );
+      const url = URL.createObjectURL(response.data);
+      const lien = document.createElement("a");
+      lien.href = url;
+      lien.download = piece.nom_original || "piece-jointe";
+      document.body.appendChild(lien);
+      lien.click();
+      lien.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (error) {
+      setErreur(error.message || t("Impossible de télécharger ce fichier."));
+    } finally {
+      setPieceTelechargement(null);
+    }
+  };
 
   /*
    * =====================================================
@@ -110,7 +174,7 @@ function Rapports({ utilisateur }) {
    * =====================================================
    */
 
-  const chargerRapports = async () => {
+  const chargerRapports = useCallback(async () => {
 
     if (!peutVoirRapports) {
       setRapports([]);
@@ -126,9 +190,7 @@ function Rapports({ utilisateur }) {
 
     try {
 
-      const response = await apiClient.get("/rapports-taches");
-
-      const data = response.data || {};
+      const data = await rapportService.lister();
 
       const liste =
         data.rapports ||
@@ -158,50 +220,13 @@ function Rapports({ utilisateur }) {
 
       setChargement(false);
     }
-  };
-
-  useEffect(() => {
-    chargerRapports();
   }, [peutVoirRapports]);
 
-  /* ============================================================
-     HELPER API
-  ============================================================ */
+  useEffect(() => {
+    const minuterie = window.setTimeout(chargerRapports, 0);
+    return () => window.clearTimeout(minuterie);
+  }, [chargerRapports]);
 
-  const api = async (endpoint, options = {}) => {
-    const headers = {
-      Accept: "application/json",
-      ...(options.headers || {}),
-    };
-
-    if (
-      options.body &&
-      !(options.body instanceof FormData)
-    ) {
-      headers["Content-Type"] = "application/json";
-    }
-
-    try {
-      const response = await apiClient.request({
-        url: endpoint,
-        method: (options.method || "GET").toLowerCase(),
-        headers,
-        data:
-          options.body && !(options.body instanceof FormData)
-            ? JSON.parse(options.body)
-            : options.body,
-      });
-
-      return response.data || {};
-    } catch (error) {
-      const data = error?.response?.data || {};
-      throw new Error(
-        data.message ||
-          "Erreur de communication avec le serveur."
-      );
-    }
-
-  };
   /* ============================================================
      SOUMISSION D'UN RAPPORT PÉRIODIQUE
      ----------------------------------------------------------
@@ -219,25 +244,22 @@ function Rapports({ utilisateur }) {
     setEnvoi(true);
 
     try {
-      await api("/rapports-taches", {
-        method: "POST",
-        body: JSON.stringify({
-          travail_effectue:
-            formulaire.travail_effectue.trim(),
+      await rapportService.creer({
+        travail_effectue:
+          formulaire.travail_effectue.trim(),
 
-          difficultes:
-            formulaire.difficultes.trim() || null,
+        difficultes:
+          formulaire.difficultes.trim() || null,
 
-          commentaire:
-            formulaire.commentaire.trim() || null,
+        commentaire:
+          formulaire.commentaire.trim() || null,
 
-          date_debut_periode:
-            formulaire.date_debut_periode || null,
+        date_debut_periode:
+          formulaire.date_debut_periode || null,
 
-          date_fin_periode:
-            formulaire.date_fin_periode || null,
-        }),
-      });
+        date_fin_periode:
+          formulaire.date_fin_periode || null,
+      }, fichiers);
 
       setModalNouveau(false);
 
@@ -248,6 +270,8 @@ function Rapports({ utilisateur }) {
         date_debut_periode: "",
         date_fin_periode: "",
       });
+      setFichiers([]);
+      setErreurFichiers("");
 
       await chargerRapports();
     } catch (error) {
@@ -286,14 +310,11 @@ function Rapports({ utilisateur }) {
     setErreur("");
 
     try {
-      await api(
-        `/rapports-taches/${rapportSelectionne.id_rapport}`,
+      await rapportService.decider(
+        rapportSelectionne.id_rapport,
         {
-          method: "PUT",
-          body: JSON.stringify({
-            statut: nouveauStatut,
-            motif: motif.trim() || null,
-          }),
+          statut: nouveauStatut,
+          motif: motif.trim() || null,
         }
       );
 
@@ -653,7 +674,7 @@ function Rapports({ utilisateur }) {
         </div>
 
         <div style={{ display: "flex", gap: "8px" }}>
-          {peutCreerRapport && (
+          {peutProduireRapport && (
             <button
               type="button"
               className="rapport-refresh-button"
@@ -946,7 +967,7 @@ function Rapports({ utilisateur }) {
                       </td>
 
                       <td>
-                        {t(afficherStatut(rapport))}
+                        {afficherStatut(rapport)}
 
                         {" "}
                         {afficherRetard(rapport)}
@@ -1003,7 +1024,7 @@ function Rapports({ utilisateur }) {
           }}
         >
           <div
-            className="rapport-modal"
+            className="rapport-modal rapport-modal--new"
             onClick={(event) =>
               event.stopPropagation()
             }
@@ -1025,11 +1046,11 @@ function Rapports({ utilisateur }) {
             </div>
 
             <div className="rapport-modal-body">
-              <p style={{ fontSize: "0.85rem", color: "#64748b" }}>
+              <p className="rapport-form-intro">
                 {t("Votre rapport sera transmis à votre supérieur hiérarchique direct.")}
               </p>
 
-              <div className="rapport-detail rapport-detail-full">
+              <div className="rapport-detail rapport-detail-full rapport-form-field">
                 <span>{t("Période du début")}</span>
                 <input
                   type="date"
@@ -1046,7 +1067,7 @@ function Rapports({ utilisateur }) {
                 />
               </div>
 
-              <div className="rapport-detail rapport-detail-full">
+              <div className="rapport-detail rapport-detail-full rapport-form-field">
                 <span>{t("Période de fin")}</span>
                 <input
                   type="date"
@@ -1063,7 +1084,7 @@ function Rapports({ utilisateur }) {
                 />
               </div>
 
-              <div className="rapport-detail rapport-detail-full">
+              <div className="rapport-detail rapport-detail-full rapport-form-field">
                 <span>{t("Travail effectué *")}</span>
                 <textarea
                   rows={5}
@@ -1082,7 +1103,7 @@ function Rapports({ utilisateur }) {
                 />
               </div>
 
-              <div className="rapport-detail rapport-detail-full">
+              <div className="rapport-detail rapport-detail-full rapport-form-field">
                 <span>{t("Difficultés rencontrées")}</span>
                 <textarea
                   rows={3}
@@ -1100,7 +1121,7 @@ function Rapports({ utilisateur }) {
                 />
               </div>
 
-              <div className="rapport-detail rapport-detail-full">
+              <div className="rapport-detail rapport-detail-full rapport-form-field">
                 <span>{t("Commentaire")}</span>
                 <textarea
                   rows={2}
@@ -1117,11 +1138,55 @@ function Rapports({ utilisateur }) {
                   placeholder={t("Information complémentaire...")}
                 />
               </div>
+
+              <div className="rapport-detail rapport-detail-full rapport-form-field">
+                <span>{t("Images et documents")}</span>
+                <label className="rapport-attachment-picker">
+                  <Paperclip size={17} />
+                  <span>{t("Ajouter des fichiers")}</span>
+                  <input
+                    type="file"
+                    multiple
+                    accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx"
+                    onChange={ajouterFichiers}
+                    disabled={envoi}
+                  />
+                </label>
+                <small>{t("JPG, PNG, WebP, PDF ou Word — 2 Mo maximum par fichier, 3 fichiers au total.")}</small>
+                {erreurFichiers && (
+                  <small className="rapport-attachment-error" role="alert">
+                    {erreurFichiers}
+                  </small>
+                )}
+                {fichiers.length > 0 && (
+                  <ul className="rapport-attachment-list">
+                    {fichiers.map((fichier) => (
+                      <li key={`${fichier.name}-${fichier.size}-${fichier.lastModified}`}>
+                        <span className="rapport-attachment-name">
+                          <Paperclip size={15} />
+                          <span>{fichier.name}</span>
+                          <small>{(fichier.size / (1024 * 1024)).toFixed(2)} Mo</small>
+                        </span>
+                        <button
+                          type="button"
+                          className="rapport-attachment-remove"
+                          onClick={() => retirerFichier(fichier)}
+                          disabled={envoi}
+                          aria-label={t("Retirer le fichier")}
+                        >
+                          <X size={15} />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
 
             <div className="rapport-modal-footer">
               <button
                 type="button"
+                className="rapport-button-secondary"
                 onClick={() =>
                   setModalNouveau(false)
                 }
@@ -1157,7 +1222,7 @@ function Rapports({ utilisateur }) {
         >
 
           <div
-            className="rapport-modal"
+            className="rapport-modal rapport-modal--consultation"
             onClick={(event) =>
               event.stopPropagation()
             }
@@ -1293,6 +1358,39 @@ function Rapports({ utilisateur }) {
                 </div>
               )}
 
+              {(
+                rapportSelectionne.pieces_jointes ||
+                rapportSelectionne.piecesJointes ||
+                []
+              ).length > 0 && (
+                <div className="rapport-detail rapport-detail-full rapport-attachments-view">
+                  <span>{t("Fichiers joints")}</span>
+                  <ul className="rapport-attachment-list">
+                    {(rapportSelectionne.pieces_jointes || rapportSelectionne.piecesJointes).map((piece) => (
+                      <li key={piece.id_piece}>
+                        <span className="rapport-attachment-name">
+                          <Paperclip size={15} />
+                          <span>{piece.nom_original}</span>
+                          {piece.taille != null && (
+                            <small>{(piece.taille / (1024 * 1024)).toFixed(2)} Mo</small>
+                          )}
+                        </span>
+                        <button
+                          type="button"
+                          className="rapport-attachment-download"
+                          onClick={() => telechargerPieceJointe(piece)}
+                          disabled={pieceTelechargement === piece.id_piece}
+                          aria-label={`${t("Télécharger")} ${piece.nom_original}`}
+                        >
+                          <Download size={15} />
+                          {pieceTelechargement === piece.id_piece ? t("Téléchargement...") : t("Télécharger")}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
               {Array.isArray(
                 rapportSelectionne.validations
               ) &&
@@ -1372,16 +1470,10 @@ function Rapports({ utilisateur }) {
                     placeholder={t("Motif (obligatoire pour correction ou rejet)...")}
                   />
 
-                  <div
-                    style={{
-                      display: "flex",
-                      flexWrap: "wrap",
-                      gap: "8px",
-                      marginTop: "10px",
-                    }}
-                  >
+                  <div className="rapport-decision-actions">
                     <button
                       type="button"
+                      className="rapport-decision-approve"
                       onClick={() =>
                         deciderRapport("valide")
                       }
@@ -1396,6 +1488,7 @@ function Rapports({ utilisateur }) {
 
                     <button
                       type="button"
+                      className="rapport-decision-correction"
                       onClick={() =>
                         deciderRapport(
                           "correction_demandee"
@@ -1410,6 +1503,7 @@ function Rapports({ utilisateur }) {
 
                     <button
                       type="button"
+                      className="rapport-decision-reject"
                       onClick={() =>
                         deciderRapport("rejete")
                       }

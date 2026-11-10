@@ -25,6 +25,10 @@ function Sidebar({ utilisateur, onDeconnexion }) {
     return aPermission(utilisateur, permission);
   };
 
+  const peutVoirSuiviDemandes = peutVoir(
+    PERMISSIONS.VOIR_SUIVI_DEMANDES
+  );
+
   const liens = [
     {
       to: "/dashboard",
@@ -37,12 +41,6 @@ function Sidebar({ utilisateur, onDeconnexion }) {
       label: "Employés",
       icon: Users,
       permission: PERMISSIONS.VOIR_EMPLOYES,
-    },
-    {
-      to: "/suivi-demandes",
-      label: "Suivi des demandes",
-      icon: FileText,
-      permission: PERMISSIONS.VOIR_DEMANDES,
     },
     {
       to: "/historique",
@@ -58,7 +56,7 @@ function Sidebar({ utilisateur, onDeconnexion }) {
     },
     {
       to: "/demandes",
-      label: "Demandes",
+      label: peutVoirSuiviDemandes ? "Suivi des demandes" : "Mes demandes",
       icon: FileText,
       permission: PERMISSIONS.VOIR_DEMANDES,
     },

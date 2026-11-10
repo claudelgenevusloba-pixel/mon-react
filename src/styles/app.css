@@ -1,7 +1,3 @@
-* {
-  box-sizing: border-box;
-}
-
 html,
 body,
 #root {
@@ -11,27 +7,6 @@ body,
 
   margin: 0;
   padding: 0;
-}
-
-body {
-  font-family:
-    Inter,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Arial,
-    sans-serif;
-
-  background: #f4f7fb;
-
-  color: #243b53;
-}
-
-button,
-input,
-textarea,
-select {
-  font-family: inherit;
 }
 
 /* =========================================================

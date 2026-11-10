@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { Activity, RefreshCw, Search } from "lucide-react";
-import DataTable from "react-data-table-component";
-import api from "../config/apiClient";
-import { useLanguage } from "../context/LanguageContext";
-import { formaterDateSelonPreference } from "../context/LanguageContext";
+import { AppDataTable, PageHeader } from "../components/common";
+import { historiqueService } from "../services/historiqueService";
+import {
+  formaterDateSelonPreference,
+  useLanguage,
+} from "../context/LanguageContext";
 import "../styles/pages/historique-actions.css";
 
 export default function HistoriqueActions() {
@@ -18,10 +20,10 @@ export default function HistoriqueActions() {
     setChargement(true);
     setErreur("");
     try {
-      const response = await api.get("/historique-actions", {
-        params: { limit: 200, module: module || undefined },
+      const data = await historiqueService.lister({
+        limit: 200,
+        module: module || undefined,
       });
-      const data = response.data || {};
       setElements(Array.isArray(data.historique) ? data.historique : []);
     } catch (error) {
       setErreur(error?.response?.data?.message || t("Impossible de charger l'historique."));
@@ -89,27 +91,30 @@ export default function HistoriqueActions() {
     },
   ], [t]);
 
-  const stylesTableau = useMemo(() => ({
-    table: { style: { backgroundColor: "#fff" } },
-    headRow: { style: { minHeight: "48px", backgroundColor: "#f5f8fc", borderBottom: "1px solid #e4eaf2" } },
-    headCells: { style: { color: "#475569", fontSize: "12px", fontWeight: 700, textTransform: "uppercase", paddingLeft: "16px", paddingRight: "16px" } },
-    rows: { style: { minHeight: "54px", color: "#334155", fontSize: "14px", borderBottom: "1px solid #edf1f6" }, highlightOnHoverStyle: { backgroundColor: "#f5f8fc", transitionDuration: "0.15s" } },
-    cells: { style: { paddingLeft: "16px", paddingRight: "16px", paddingTop: "10px", paddingBottom: "10px" } },
-    pagination: { style: { minHeight: "56px", borderTop: "1px solid #edf1f6", color: "#64748b", fontSize: "13px" } },
-  }), []);
-
   return (
     <section className="history-page">
-      <header className="history-heading">
-        <div>
-          <span className="history-eyebrow">GAIN OFFICE</span>
-          <h1><Activity size={24} /> {t("Historique des actions")}</h1>
-          <p>{t("Consultez les actions récentes enregistrées dans l'application.")}</p>
-        </div>
-        <button type="button" className="history-refresh" onClick={charger} disabled={chargement}>
-          <RefreshCw size={16} /> {t("Actualiser")}
-        </button>
-      </header>
+      <PageHeader
+        className="history-heading"
+        eyebrow="GAIN OFFICE"
+        eyebrowClassName="history-eyebrow"
+        title={
+          <>
+            <Activity size={24} aria-hidden="true" />
+            {t("Historique des actions")}
+          </>
+        }
+        description={t("Consultez les actions récentes enregistrées dans l'application.")}
+        actions={
+          <button
+            type="button"
+            className="history-refresh"
+            onClick={charger}
+            disabled={chargement}
+          >
+            <RefreshCw size={16} /> {t("Actualiser")}
+          </button>
+        }
+      />
 
       <div className="history-filters">
         <label className="history-search">
@@ -125,28 +130,19 @@ export default function HistoriqueActions() {
       {erreur && <div className="history-error">{t(erreur)}</div>}
 
       <div className="history-table-wrap">
-        <DataTable
+        <AppDataTable
           columns={colonnes}
           data={resultat}
           keyField="id_historique"
           defaultSortFieldId="created_at"
           defaultSortAsc={false}
-          pagination
-          paginationPerPage={10}
-          paginationRowsPerPageOptions={[10, 20, 50]}
           paginationComponentOptions={{
             rowsPerPageText: t("Actions par page"),
             rangeSeparatorText: t("sur"),
-            noRowsPerPage: false,
-            selectAllRowsItem: false,
           }}
           progressPending={chargement}
           progressComponent={<div className="history-empty">{t("Chargement de l'historique...")}</div>}
-          highlightOnHover
-          striped
-          responsive
-          customStyles={stylesTableau}
-          noDataComponent={t("Aucune action enregistrée.")}
+          noDataMessage={t("Aucune action enregistrée.")}
         />
       </div>
       <div className="history-result-count">{resultat.length} {t("action(s)")}</div>

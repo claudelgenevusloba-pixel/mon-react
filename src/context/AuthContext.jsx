@@ -13,6 +13,7 @@ import {
   getMenuUtilisateur,
   getContexteUtilisateur,
 } from "../config/access";
+import { authStorage } from "../services/authStorage";
 
 const AuthContext = createContext(null);
 
@@ -24,15 +25,7 @@ const AuthContext = createContext(null);
 
 function lireUtilisateurStocke() {
   try {
-    const utilisateurStocke =
-      localStorage.getItem("gain_office_user") ||
-      localStorage.getItem("user");
-
-    if (!utilisateurStocke) {
-      return null;
-    }
-
-    return JSON.parse(utilisateurStocke);
+    return authStorage.getUser();
 
   } catch (error) {
 
@@ -63,8 +56,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const gererSessionExpiree = () => {
       setUtilisateurState(null);
-      localStorage.removeItem("gain_office_user");
-      localStorage.removeItem("user");
+      authStorage.clearUser();
     };
 
     window.addEventListener(
@@ -95,31 +87,11 @@ export function AuthProvider({ children }) {
     );
 
     if (!utilisateurNouveau) {
-
-      localStorage.removeItem(
-        "gain_office_user"
-      );
-
-      localStorage.removeItem(
-        "user"
-      );
-
+      authStorage.clearUser();
       return;
     }
 
-    localStorage.setItem(
-      "gain_office_user",
-      JSON.stringify(
-        utilisateurNouveau
-      )
-    );
-
-    localStorage.setItem(
-      "user",
-      JSON.stringify(
-        utilisateurNouveau
-      )
-    );
+    authStorage.setUser(utilisateurNouveau);
   };
 
   /**
@@ -151,13 +123,7 @@ export function AuthProvider({ children }) {
 
     setUtilisateurState(null);
 
-    localStorage.removeItem(
-      "gain_office_user"
-    );
-
-    localStorage.removeItem(
-      "user"
-    );
+    authStorage.clearUser();
   };
 
   /**

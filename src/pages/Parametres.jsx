@@ -19,11 +19,12 @@ import { aPermission, getRole } from "../config/access";
 import { ROLES } from "../config/roles";
 import { useAuth } from "../context/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
+import { Avatar, ImageUploadField } from "../components/common";
 
 import "../styles/pages/parametres.css";
 
-import { API_URL } from "../config/api";
 import api from "../config/apiClient";
+import { authStorage } from "../services/authStorage";
 
 const PARAMETRES_PAR_DEFAUT = {
   notificationsEmail: true,
@@ -37,11 +38,7 @@ const PARAMETRES_PAR_DEFAUT = {
 };
 
 function obtenirToken() {
-  return (
-    localStorage.getItem("gain_office_token") ||
-    localStorage.getItem("token") ||
-    ""
-  );
+  return authStorage.getToken();
 }
 
 function obtenirIdUtilisateur(utilisateur) {
@@ -101,8 +98,9 @@ function Parametres({ utilisateur }) {
     return PARAMETRES_PAR_DEFAUT;
   });
 
-  const [profil, setProfil] = useState({
-    nom:
+  const [profil, setProfil] = useState(() => {
+    const profilInitial = {
+      nom:
       utilisateur?.nom ||
       utilisateur?.prenomNom ||
       "Utilisateur GAIN OFFICE",
@@ -119,17 +117,42 @@ function Parametres({ utilisateur }) {
       utilisateur?.telephone ||
       "",
 
-    fonction:
-      utilisateur?.role?.nom ||
-      utilisateur?.role ||
-      "Employé",
+      fonction:
+        utilisateur?.role?.nom ||
+        utilisateur?.role ||
+        "Employé",
+    };
+
+    try {
+      const sauvegardeProfil = localStorage.getItem(
+        `gainOfficeProfil_${idUtilisateur}`,
+      );
+      return sauvegardeProfil
+        ? { ...profilInitial, ...JSON.parse(sauvegardeProfil) }
+        : profilInitial;
+    } catch (error) {
+      console.error("Erreur de lecture du profil :", error);
+      return profilInitial;
+    }
   });
 
-  const [entreprise, setEntreprise] = useState({
-    nom: "Groupe GAIN SARL",
-    email: "",
-    telephone: "",
-    adresse: "Abidjan, Côte d'Ivoire",
+  const [entreprise, setEntreprise] = useState(() => {
+    const entrepriseInitiale = {
+      nom: "Groupe GAIN SARL",
+      email: "",
+      telephone: "",
+      adresse: "Abidjan, Côte d'Ivoire",
+    };
+
+    try {
+      const sauvegarde = localStorage.getItem("gainOfficeEntreprise");
+      return sauvegarde
+        ? { ...entrepriseInitiale, ...JSON.parse(sauvegarde) }
+        : entrepriseInitiale;
+    } catch (error) {
+      console.error("Erreur de lecture des informations de l'entreprise :", error);
+      return entrepriseInitiale;
+    }
   });
 
   /*
@@ -169,6 +192,7 @@ function Parametres({ utilisateur }) {
     useState(false);
 
   const [chargementProfil, setChargementProfil] = useState(false);
+  const [photoFichier, setPhotoFichier] = useState(null);
 
   useEffect(() => {
     try {
@@ -186,28 +210,6 @@ function Parametres({ utilisateur }) {
         idUtilisateur
       );
 
-      const sauvegardeProfil = localStorage.getItem(
-        `gainOfficeProfil_${idUtilisateur}`
-      );
-
-      if (sauvegardeProfil) {
-        setProfil((ancien) => ({
-          ...ancien,
-          ...JSON.parse(sauvegardeProfil),
-        }));
-      }
-
-      const sauvegardeEntreprise =
-        localStorage.getItem(
-          "gainOfficeEntreprise"
-        );
-
-      if (sauvegardeEntreprise) {
-        setEntreprise((ancien) => ({
-          ...ancien,
-          ...JSON.parse(sauvegardeEntreprise),
-        }));
-      }
     } catch (error) {
       console.error(
         "Erreur de chargement des paramètres :",
@@ -215,34 +217,6 @@ function Parametres({ utilisateur }) {
       );
     }
   }, [idUtilisateur, setLangue, setFormatDate]);
-
-  useEffect(() => {
-    setProfil((ancien) => ({
-      ...ancien,
-
-      nom:
-        utilisateur?.nom ||
-        utilisateur?.prenomNom ||
-        ancien.nom,
-
-      prenom:
-        utilisateur?.prenom ||
-        ancien.prenom,
-
-      email:
-        utilisateur?.email ||
-        ancien.email,
-
-      telephone:
-        utilisateur?.telephone ||
-        ancien.telephone,
-
-      fonction:
-        utilisateur?.role?.nom ||
-        utilisateur?.role ||
-        ancien.fonction,
-    }));
-  }, [utilisateur]);
 
   const afficherMessage = (
     texte,
@@ -320,12 +294,26 @@ function Parametres({ utilisateur }) {
     setChargementProfil(true);
 
     try {
-      const response = await api.put("/auth/profil", {
+      const donneesProfil = {
         nom: profil.nom,
         prenom: profil.prenom,
         email: profil.email,
         telephone: profil.telephone || null,
-      });
+      };
+
+      let response;
+
+      if (photoFichier) {
+        const formulaire = new FormData();
+        Object.entries(donneesProfil).forEach(([cle, valeur]) => {
+          formulaire.append(cle, valeur ?? "");
+        });
+        formulaire.append("photo", photoFichier);
+        formulaire.append("_method", "PUT");
+        response = await api.post("/auth/profil", formulaire);
+      } else {
+        response = await api.put("/auth/profil", donneesProfil);
+      }
 
       const data = response.data || {};
 
@@ -333,6 +321,7 @@ function Parametres({ utilisateur }) {
       // pour que le nouvel e-mail soit immédiatement visible partout.
       if (data.utilisateur) {
         setUtilisateur(data.utilisateur);
+        setPhotoFichier(null);
       }
 
       // Conserve aussi une copie dans le localStorage dédié (cache).
@@ -380,10 +369,7 @@ function Parametres({ utilisateur }) {
 
   useEffect(() => {
     const chargerConfigRapports = async () => {
-      const accessToken =
-        localStorage.getItem("gain_office_token") ||
-        localStorage.getItem("token") ||
-        "";
+      const accessToken = authStorage.getToken();
 
       if (!accessToken) {
         return;
@@ -471,13 +457,8 @@ function Parametres({ utilisateur }) {
       return;
     }
 
-    const accessToken =
-      localStorage.getItem("gain_office_token") ||
-      localStorage.getItem("token") ||
-      "";
-
     try {
-      const response = await api.put("/parametres", {
+      await api.put("/parametres", {
         nom_entreprise:
           nomEntrepriseApi ||
           entreprise.nom ||
@@ -574,7 +555,7 @@ function Parametres({ utilisateur }) {
     setChargementMotDePasse(true);
 
     try {
-      const response = await api.put("/auth/password", {
+      await api.put("/auth/password", {
         ancien_mot_de_passe:
           motDePasse.ancien,
 
@@ -607,41 +588,6 @@ function Parametres({ utilisateur }) {
       );
     } finally {
       setChargementMotDePasse(false);
-    }
-  };
-
-  const reinitialiserParametres = () => {
-    const confirmation = window.confirm(
-      t("Voulez-vous vraiment réinitialiser vos préférences personnelles ?")
-    );
-
-    if (!confirmation) {
-      return;
-    }
-
-    setParametres({
-      ...PARAMETRES_PAR_DEFAUT,
-    });
-
-    try {
-      localStorage.setItem(
-        `gainOfficeParametres_${idUtilisateur}`,
-        JSON.stringify(PARAMETRES_PAR_DEFAUT)
-      );
-
-      setLangue(PARAMETRES_PAR_DEFAUT.langue, idUtilisateur);
-      setFormatDate(PARAMETRES_PAR_DEFAUT.formatDate, idUtilisateur);
-
-      afficherMessage(
-        t("Vos préférences ont été réinitialisées.")
-      );
-    } catch (error) {
-      console.error(error);
-
-      afficherMessage(
-        t("Impossible de réinitialiser les préférences."),
-        "error"
-      );
     }
   };
 
@@ -783,14 +729,6 @@ function Parametres({ utilisateur }) {
 
           </nav>
 
-          <button
-            type="button"
-            className="settings-reset-button"
-            onClick={reinitialiserParametres}
-          >
-            {t("Réinitialiser mes préférences")}
-          </button>
-
         </aside>
 
         <main className="settings-content">
@@ -816,15 +754,12 @@ function Parametres({ utilisateur }) {
 
               <div className="profile-card">
 
-                <div className="profile-avatar">
-                  {profil.nom
-                    ?.split(" ")
-                    .filter(Boolean)
-                    .map((mot) => mot[0])
-                    .join("")
-                    .slice(0, 2)
-                    .toUpperCase()}
-                </div>
+                <Avatar
+                  src={utilisateur?.photo}
+                  name={`${profil.prenom} ${profil.nom}`.trim()}
+                  size="large"
+                  className="profile-avatar"
+                />
 
                 <div>
                   <h3>{profil.nom}</h3>
@@ -835,6 +770,18 @@ function Parametres({ utilisateur }) {
                 </div>
 
               </div>
+
+              <ImageUploadField
+                label={t("Photo de profil")}
+                image={utilisateur?.photo}
+                file={photoFichier}
+                onChange={setPhotoFichier}
+                onError={(messageErreur) =>
+                  afficherMessage(messageErreur, "error")
+                }
+                disabled={chargementProfil}
+                helperText={t("JPG, PNG ou WebP — 2 Mo maximum. Enregistrez votre profil pour appliquer la photo.")}
+              />
 
               <div className="settings-form-grid">
 

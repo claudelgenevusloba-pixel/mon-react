@@ -7,7 +7,6 @@ import {
   Navigate,
   Route,
   Routes,
-  useLocation,
 } from "react-router-dom";
 
 import { AuthProvider } from "./context/AuthContext";
@@ -16,15 +15,15 @@ import { useLanguage } from "./context/LanguageContext";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Employes from "./pages/Employes";
-import SuiviDemandes from "./pages/SuiviDemandes";
 import Taches from "./pages/Taches";
 import Demandes from "./pages/Demandes";
 import Parametres from "./pages/Parametres";
 import Rapports from "./pages/Rapports";
 import HistoriqueActions from "./pages/HistoriqueActions";
+import Page404 from "./pages/page404";
+import { AccessDenied, RoutePermission } from "./components/routing";
 
-import Sidebar from "./components/Sidebar";
-import Header from "./components/Header";
+import AppLayout from "./layouts/AppLayout";
 import ActivationCompte from "./pages/ActivationCompte";
 import MotDePasseOublie from "./pages/MotDePasseOublie";
 import ReinitialisationMotDePasse from "./pages/ReinitialisationMotDePasse";
@@ -36,78 +35,11 @@ import {
 import { PERMISSIONS } from "./config/permissions";
 
 import "./styles/app.css";
+import "./styles/components/shared.css";
 
 import { API_URL } from "./config/api";
 import api from "./config/apiClient";
-
-/**
- * =========================================================
- * PAGE — ACCÈS REFUSÉ
- * =========================================================
- */
-
-function AccesRefuse() {
-  const location = useLocation();
-  const { t } = useLanguage();
-
-  return (
-    <div className="access-denied-page">
-      <div className="access-denied-box">
-
-        <div className="access-denied-icon">
-          🔒
-        </div>
-
-        <h1>
-          {t("Accès refusé")}
-        </h1>
-
-        <p>
-          {t("Vous n'avez pas les permissions nécessaires pour accéder à cette page.")}
-        </p>
-
-        <small>
-          {t("Page demandée :")} {" "}
-          {location.pathname}
-        </small>
-
-      </div>
-    </div>
-  );
-}
-
-/**
- * =========================================================
- * ROUTE PROTÉGÉE PAR PERMISSION
- * =========================================================
- */
-
-function RoutePermission({
-  utilisateur,
-  permission,
-  children,
-}) {
-  if (!utilisateur) {
-    return (
-      <Navigate
-        to="/login"
-        replace
-      />
-    );
-  }
-
-  if (
-    permission &&
-    !aPermission(
-      utilisateur,
-      permission
-    )
-  ) {
-    return <AccesRefuse />;
-  }
-
-  return children;
-}
+import { authStorage } from "./services/authStorage";
 
 /**
  * =========================================================
@@ -139,10 +71,6 @@ function obtenirPremierePageAutorisee(utilisateur) {
     },
     {
       path: "/demandes",
-      permission: PERMISSIONS.VOIR_DEMANDES,
-    },
-    {
-      path: "/suivi-demandes",
       permission: PERMISSIONS.VOIR_DEMANDES,
     },
     {
@@ -227,13 +155,7 @@ function App() {
 
     const verifierSession = async () => {
 
-      const token =
-        localStorage.getItem(
-          "gain_office_token"
-        ) ||
-        localStorage.getItem(
-          "token"
-        );
+      const token = authStorage.getToken();
 
       if (!token) {
 
@@ -340,19 +262,7 @@ function App() {
          * -------------------------------------------------
          */
 
-        localStorage.setItem(
-          "gain_office_user",
-          JSON.stringify(
-            utilisateurFinal
-          )
-        );
-
-        localStorage.setItem(
-          "user",
-          JSON.stringify(
-            utilisateurFinal
-          )
-        );
+        authStorage.setUser(utilisateurFinal);
 
       } catch (error) {
 
@@ -367,21 +277,7 @@ function App() {
          * -----------------------------------------------
          */
 
-        localStorage.removeItem(
-          "gain_office_token"
-        );
-
-        localStorage.removeItem(
-          "gain_office_user"
-        );
-
-        localStorage.removeItem(
-          "token"
-        );
-
-        localStorage.removeItem(
-          "user"
-        );
+        authStorage.clear();
 
         setUtilisateur(null);
         setConnecte(false);
@@ -477,19 +373,7 @@ function App() {
 
       setConnecte(true);
 
-      localStorage.setItem(
-        "gain_office_user",
-        JSON.stringify(
-          utilisateurFinal
-        )
-      );
-
-      localStorage.setItem(
-        "user",
-        JSON.stringify(
-          utilisateurFinal
-        )
-      );
+      authStorage.setUser(utilisateurFinal);
     };
 
   /**
@@ -501,13 +385,7 @@ function App() {
   const gererDeconnexion =
     async () => {
 
-      const token =
-        localStorage.getItem(
-          "gain_office_token"
-        ) ||
-        localStorage.getItem(
-          "token"
-        );
+      const token = authStorage.getToken();
 
       try {
 
@@ -524,21 +402,7 @@ function App() {
 
       } finally {
 
-        localStorage.removeItem(
-          "gain_office_token"
-        );
-
-        localStorage.removeItem(
-          "gain_office_user"
-        );
-
-        localStorage.removeItem(
-          "token"
-        );
-
-        localStorage.removeItem(
-          "user"
-        );
+        authStorage.clear();
 
         setUtilisateur(null);
         setConnecte(false);
@@ -640,29 +504,10 @@ function App() {
            * =================================================
            */
 
-          <div className="app-layout">
-
-            <Sidebar
-              utilisateur={
-                utilisateur
-              }
-              onDeconnexion={
-                gererDeconnexion
-              }
-            />
-
-            <div className="app-main">
-
-              <Header
-                utilisateur={
-                  utilisateur
-                }
-                onDeconnexion={
-                  gererDeconnexion
-                }
-              />
-
-              <main className="app-content">
+          <AppLayout
+            utilisateur={utilisateur}
+            onDeconnexion={gererDeconnexion}
+          >
 
                 <Routes>
 
@@ -744,28 +589,10 @@ function App() {
                     }
                   />
 
-                  {/* =========================================
-                      DATA TABLE
-                  ========================================= */}
-
+                  {/* L'ancienne URL reste un raccourci vers l'unique page. */}
                   <Route
                     path="/suivi-demandes"
-                    element={
-                      <RoutePermission
-                        utilisateur={
-                          utilisateur
-                        }
-                        permission={
-                          PERMISSIONS.VOIR_DEMANDES
-                        }
-                      >
-                        <SuiviDemandes
-                          utilisateur={
-                            utilisateur
-                          }
-                        />
-                      </RoutePermission>
-                    }
+                    element={<Navigate to="/demandes" replace />}
                   />
 
                   {/* =========================================
@@ -803,9 +630,10 @@ function App() {
                         utilisateur={
                           utilisateur
                         }
-                        permission={
-                          PERMISSIONS.VOIR_DEMANDES
-                        }
+                        permission={[
+                          PERMISSIONS.VOIR_DEMANDES,
+                          PERMISSIONS.VOIR_SUIVI_DEMANDES,
+                        ]}
                       >
                         <Demandes
                           utilisateur={
@@ -885,7 +713,7 @@ function App() {
                   <Route
                     path="/acces-refuse"
                     element={
-                      <AccesRefuse />
+                      <AccessDenied />
                     }
                   />
 
@@ -913,25 +741,12 @@ function App() {
 
                   <Route
                     path="*"
-                    element={
-                      <Navigate
-                        to={
-                          obtenirPremierePageAutorisee(
-                            utilisateur
-                          )
-                        }
-                        replace
-                      />
-                    }
+                    element={<Page404 />}
                   />
 
                 </Routes>
 
-              </main>
-
-            </div>
-
-          </div>
+          </AppLayout>
 
         )}
 

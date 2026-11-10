@@ -337,6 +337,11 @@
   color: #c77800;
 }
 
+.status-danger {
+  background: #fff0f0;
+  color: #c62828;
+}
+
 .rapport-view-button {
   height: 32px;
   padding: 0 10px;
@@ -385,9 +390,12 @@
 
 .rapport-modal {
   width: min(650px, 100%);
+  max-height: min(88vh, 850px);
   background: #ffffff;
   border-radius: 15px;
   box-shadow: 0 25px 70px rgba(0, 0, 0, 0.22);
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 
@@ -433,6 +441,19 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 18px;
+  overflow-y: auto;
+}
+
+.rapport-form-intro {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid #dce8f7;
+  border-radius: 9px;
+  background: #f5f8fd;
+  color: #53657c;
+  font-size: 12px;
+  line-height: 1.55;
 }
 
 .rapport-detail span {
@@ -462,11 +483,204 @@
   line-height: 1.6;
 }
 
+.rapport-form-field > span {
+  color: #485b73;
+  font-weight: 700;
+}
+
+.rapport-form-field input,
+.rapport-form-field textarea,
+.rapport-detail textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #d9e2ee;
+  border-radius: 9px;
+  padding: 10px 12px;
+  background: #fff;
+  color: #26374d;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.5;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.rapport-form-field input:focus,
+.rapport-form-field textarea:focus,
+.rapport-detail textarea:focus {
+  outline: none;
+  border-color: #6b9de0;
+  box-shadow: 0 0 0 3px rgb(20 88 189 / 12%);
+}
+
+.rapport-form-field textarea,
+.rapport-detail textarea {
+  resize: vertical;
+  min-height: 82px;
+}
+
+.rapport-attachment-picker {
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 14px;
+  border: 1px dashed #91add2;
+  border-radius: 9px;
+  background: #f7faff;
+  color: #1458bd;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.rapport-attachment-picker:hover {
+  background: #edf4ff;
+  border-color: #5e8dcc;
+}
+
+.rapport-attachment-picker input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+.rapport-form-field > small {
+  color: #8592a4;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.rapport-attachment-list {
+  display: grid;
+  gap: 8px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rapport-attachment-list li {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 1px solid #e3eaf2;
+  border-radius: 8px;
+  background: #fbfcfe;
+}
+
+.rapport-attachment-name {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #40536c;
+  font-size: 11px;
+}
+
+.rapport-attachment-name > svg {
+  flex: 0 0 auto;
+  color: #6283ad;
+}
+
+.rapport-attachment-name > span {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: #34475f;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rapport-attachment-name small {
+  flex: 0 0 auto;
+  color: #8491a3;
+  font-size: 10px;
+}
+
+.rapport-attachment-remove,
+.rapport-attachment-download {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 9px;
+  border: 1px solid #d6e2f1;
+  border-radius: 7px;
+  background: #fff;
+  color: #1458bd;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.rapport-attachment-remove {
+  width: 30px;
+  padding: 0;
+  color: #b53b45;
+}
+
+.rapport-attachment-remove:hover,
+.rapport-attachment-download:hover {
+  background: #edf4ff;
+}
+
+.rapport-attachment-remove:disabled,
+.rapport-attachment-download:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.rapport-decision-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.rapport-decision-actions button {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.rapport-decision-approve {
+  background: #e9f7ef;
+  color: #187343;
+}
+
+.rapport-decision-correction {
+  background: #fff6e8;
+  color: #966000;
+}
+
+.rapport-decision-reject {
+  background: #fff0f0;
+  color: #ae3030;
+}
+
+.rapport-decision-actions button:hover {
+  filter: brightness(0.97);
+}
+
 .rapport-modal-footer {
   padding: 14px 20px;
   border-top: 1px solid #edf1f6;
   display: flex;
   justify-content: flex-end;
+  gap: 9px;
 }
 
 .rapport-modal-footer button {
@@ -483,6 +697,17 @@
 
 .rapport-modal-footer button:hover {
   background: #0f479a;
+}
+
+.rapport-modal-footer .rapport-button-secondary {
+  border: 1px solid #d8e2ef;
+  background: #fff;
+  color: #40536c;
+}
+
+.rapport-modal-footer .rapport-button-secondary:hover {
+  background: #f5f8fc;
+  border-color: #c6d3e2;
 }
 
 @media (max-width: 1050px) {
@@ -521,9 +746,24 @@
 
   .rapport-modal-body {
     grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 16px;
   }
 
   .rapport-detail-full {
     grid-column: auto;
+  }
+
+  .rapport-form-intro {
+    grid-column: auto;
+  }
+
+  .rapport-modal-footer {
+    padding: 12px 16px;
+  }
+
+  .rapport-modal-footer button {
+    flex: 1;
+    padding: 0 10px;
   }
 }

@@ -1,16 +1,27 @@
-# React + Vite
+# GAIN OFFICE — frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Application React de gestion des employés, demandes, tâches, rapports et paramètres de GAIN OFFICE.
 
-Currently, two official plugins are available:
+## Démarrer l’application
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+1. Installer Node.js et npm.
+2. À la racine de ce projet, exécuter `npm install` si les dépendances ne sont pas encore installées.
+3. Lancer `npm run dev`.
+4. Démarrer l’API Laravel située dans `C:\wamp64\www\gain-office-api`.
 
-## React Compiler
+Le frontend appelle l’API Laravel configurée dans `src/config/api.js`. Les requêtes communes passent par Axios, puis par les services métier dans `src/services/`.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Organisation du code
 
-## Expanding the ESLint configuration
+- `src/components/` : éléments d’interface réutilisables.
+- `src/config/` : configuration de l’API, des routes, des rôles et des permissions.
+- `src/context/` : état partagé, notamment la session et la langue.
+- `src/hooks/` : comportements React réutilisables.
+- `src/layouts/` : structure commune des pages connectées.
+- `src/pages/` : écrans de l’application.
+- `src/services/` : communication avec l’API Laravel.
+- `src/styles/` : styles globaux, composants et pages.
+- `src/utils/` : fonctions de formatage et de traitement des médias.
+- `output/pdf/` : guides de référence du projet au format PDF.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Les fichiers d’environnement et les secrets ne doivent pas être ajoutés au dépôt Git.

@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useRef,
   useState,
@@ -21,11 +22,12 @@ import {
 import { PERMISSIONS } from "../config/permissions";
 import { aPermission } from "../config/access";
 import { useLanguage } from "../context/LanguageContext";
+import { Avatar } from "./common";
 
 import "../styles/components/header.css";
 
-import { API_URL } from "../config/api";
 import api from "../config/apiClient";
+import { authStorage } from "../services/authStorage";
 
 function Header({
   utilisateur,
@@ -69,9 +71,7 @@ function Header({
   const menuRef = useRef(null);
   const notificationsRef = useRef(null);
 
-  const token =
-    localStorage.getItem("gain_office_token") ||
-    localStorage.getItem("token");
+  const token = authStorage.getToken();
 
   const nomComplet = utilisateur
     ? `${utilisateur.prenom || ""} ${
@@ -119,7 +119,7 @@ function Header({
   // NOTIFICATIONS
   // =====================================================
 
-  const lireNotifications = async () => {
+  const lireNotifications = useCallback(async () => {
     if (!token || !peutVoirNotifications) {
       setNotifications([]);
       setNotificationsNonLues(0);
@@ -201,7 +201,7 @@ function Header({
     } finally {
       setChargementNotifications(false);
     }
-  };
+  }, [token, peutVoirNotifications]);
 
   const marquerNotificationLue = async (id) => {
     if (!token || !peutVoirNotifications) return;
@@ -255,18 +255,23 @@ function Header({
   };
 
   useEffect(() => {
-    lireNotifications();
+    const programmerLecture = () => {
+      window.setTimeout(() => {
+        lireNotifications();
+      }, 0);
+    };
 
-    const interval = setInterval(() => {
-      lireNotifications();
-    }, 30000);
+    programmerLecture();
+
+    const interval = window.setInterval(programmerLecture, 30000);
 
     return () =>
-      clearInterval(interval);
+      window.clearInterval(interval);
   }, [
     token,
     location.pathname,
     peutVoirNotifications,
+    lireNotifications,
   ]);
 
   useEffect(() => {
@@ -288,6 +293,7 @@ function Header({
   }, [
     token,
     peutVoirNotifications,
+    lireNotifications,
   ]);
     // =====================================================
   // FERMETURE DES MENUS
@@ -420,27 +426,6 @@ function Header({
     );
 
     setNotificationsOuvertes(false);
-  };
-
-  const allerNotifications = () => {
-    if (!peutVoirNotifications) return;
-
-    setNotificationsOuvertes(false);
-    navigate("/notifications");
-  };
-
-  const allerRapports = () => {
-    if (!peutVoirRapports) return;
-
-    setMenuOuvert(false);
-    navigate("/rapports");
-  };
-
-  const allerParametres = () => {
-    if (!peutVoirParametres) return;
-
-    setMenuOuvert(false);
-    navigate("/parametres");
   };
 
   const allerProfil = () => {
@@ -684,9 +669,13 @@ function Header({
             onClick={ouvrirProfil}
           >
 
-            <div className="profile-avatar">
-              {initiales}
-            </div>
+            <Avatar
+              src={utilisateur?.photo}
+              name={nomComplet}
+              initials={initiales}
+              size="small"
+              className="profile-avatar"
+            />
 
             <div className="profile-information">
 
@@ -714,9 +703,13 @@ function Header({
 
               <div className="profile-dropdown-top">
 
-                <div className="profile-dropdown-avatar">
-                  {initiales}
-                </div>
+                <Avatar
+                  src={utilisateur?.photo}
+                  name={nomComplet}
+                  initials={initiales}
+                  size="medium"
+                  className="profile-dropdown-avatar"
+                />
 
                 <div>
 

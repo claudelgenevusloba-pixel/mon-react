@@ -59,6 +59,7 @@ export const PERMISSIONS = {
   // =======================================================
 
   VOIR_DEMANDES: "voir_demandes",
+  VOIR_SUIVI_DEMANDES: "voir_suivi_demandes",
   CREER_DEMANDE: "creer_demande",
   MODIFIER_DEMANDE: "modifier_demande",
   SUPPRIMER_DEMANDE: "supprimer_demande",

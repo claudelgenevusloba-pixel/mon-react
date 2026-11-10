@@ -3,6 +3,15 @@ import { useLanguage } from "../context/LanguageContext";
 import { formaterDateSelonPreference } from "../context/LanguageContext";
 import { createPortal } from "react-dom";
 import { QRCodeSVG } from "qrcode.react";
+import {
+  Avatar,
+  ImageUploadField,
+  StatCard,
+  Toast,
+} from "../components/common";
+import { useToast } from "../hooks/useToast";
+import { employeService } from "../services/employeService";
+import { getInitials } from "../utils/formatters";
 
 import {
   UserPlus,
@@ -40,20 +49,10 @@ import { PERMISSIONS } from "../config/permissions";
 import { aPermission, getRole, normaliser } from "../config/access";
 import { ROLES } from "../config/roles";
 
-import apiClient from "../config/apiClient";
 
 /* ============================================================
    UTILITAIRES
 ============================================================ */
-
-function initiales(nom = "") {
-  return nom
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((mot) => mot.charAt(0).toUpperCase())
-    .join("");
-}
 
 function statutTexte(statut) {
   if (statut === "actif") return "Actif";
@@ -268,37 +267,8 @@ function normaliserEmploye(item) {
       "",
 
     initiales:
-      initiales(nomComplet),
+      getInitials(nomComplet, ""),
   };
-}
-
-/* ============================================================
-   AVATAR
-============================================================ */
-
-function Avatar({
-  employe,
-  large = false,
-}) {
-  return (
-    <div
-      className={
-        large
-          ? "employee-avatar employee-avatar-large"
-          : "employee-avatar"
-      }
-    >
-      {employe?.photo ? (
-        <img
-          src={employe.photo}
-          alt={employe.nom}
-        />
-      ) : (
-        employe?.initiales ||
-        initiales(employe?.nom)
-      )}
-    </div>
-  );
 }
 
 /* ============================================================
@@ -363,8 +333,13 @@ export default function Employes({
   const menuButtonRef =
     useRef(null);
 
-  const [toast, setToast] =
-    useState(null);
+  const {
+    toast,
+    showToast: afficherToast,
+    clearToast: fermerToast,
+  } = useToast();
+
+  const [photoFichier, setPhotoFichier] = useState(null);
 
   /*
    * QR code d'inscription affiché au RH :
@@ -445,20 +420,6 @@ export default function Employes({
      TOAST
   ============================================================ */
 
-  const afficherToast = (
-    message,
-    type = "success"
-  ) => {
-    setToast({
-      message,
-      type,
-    });
-
-    setTimeout(() => {
-      setToast(null);
-    }, 3500);
-  };
-
   /* ============================================================
      COMPTE À REBOURS DU QR CODE (15 minutes)
   ============================================================ */
@@ -525,69 +486,6 @@ export default function Employes({
   }
 
   /* ============================================================
-     API
-  ============================================================ */
-
-  const api = async (
-    endpoint,
-    options = {}
-  ) => {
-    const headers = {
-      Accept:
-        "application/json",
-      ...(options.headers || {}),
-    };
-
-    if (
-      options.body &&
-      !(options.body instanceof FormData)
-    ) {
-      headers["Content-Type"] =
-        "application/json";
-    }
-
-    let response;
-    let data = {};
-
-    try {
-      response = await apiClient.request({
-        url: endpoint,
-        method: (options.method || "GET").toLowerCase(),
-        headers,
-        data:
-          options.body && !(options.body instanceof FormData)
-            ? JSON.parse(options.body)
-            : options.body,
-      });
-
-      data = response.data || {};
-    } catch (error) {
-      const errData = error?.response?.data || {};
-      data = errData;
-
-      let message =
-        errData?.message ||
-        "Erreur de communication avec le serveur.";
-
-      if (errData?.errors) {
-        const erreurs = Object.entries(errData.errors)
-          .map(([champ, messages]) =>
-            `${champ} : ${Array.isArray(messages) ? messages.join(", ") : messages}`
-          )
-          .join(" | ");
-
-        if (erreurs) {
-          message += ` — ${erreurs}`;
-        }
-      }
-
-      throw new Error(message);
-    }
-
-    return data;
-  };
-
-  /* ============================================================
      CHARGEMENT
   ============================================================ */
 
@@ -606,11 +504,11 @@ export default function Employes({
           servicesData,
           postesData,
         ] = await Promise.all([
-          api("/employes"),
-          api("/roles"),
-          api("/roles-disponibles"),
-          api("/services"),
-          api("/postes"),
+          employeService.list(),
+          employeService.roles(),
+          employeService.rolesDisponibles(),
+          employeService.services(),
+          employeService.postes(),
         ]);
 
         const listeEmployes =
@@ -1102,6 +1000,8 @@ export default function Employes({
 
   const ouvrirInvitation =
     () => {
+      setPhotoFichier(null);
+
       const roleEmploye =
         rolesAPI.find(
           (element) => {
@@ -1166,6 +1066,8 @@ export default function Employes({
   const ouvrirModification = (
     employe
   ) => {
+    setPhotoFichier(null);
+
     const posteActuel =
       postes.find(
         (poste) =>
@@ -1273,6 +1175,7 @@ export default function Employes({
     }
 
     setModal(null);
+    setPhotoFichier(null);
 
     setEmployeSelectionne(
       null
@@ -1496,66 +1399,25 @@ export default function Employes({
           true
         );
 
-        const resultat =
-          await api(
-            "/invitations",
-            {
-              method: "POST",
-
-              body:
-                JSON.stringify({
-                  nom:
-                    formulaire.nom.trim(),
-
-                  prenom:
-                    formulaire.prenom.trim(),
-
-                  email:
-                    formulaire.email
-                      .trim()
-                      .toLowerCase(),
-
-                  telephone:
-                    formulaire.telephone.trim(),
-
-                  id_role:
-                    Number(
-                      formulaire.id_role
-                    ),
-
-                  id_poste:
-                    Number(
-                      formulaire.id_poste
-                    ),
-
-                  matricule:
-                    formulaire.matricule.trim(),
-
-                  date_embauche:
-                    formulaire.date_embauche ||
-                    null,
-
-                  date_naissance:
-                    formulaire.date_naissance ||
-                    null,
-
-                  adresse:
-                    formulaire.adresse ||
-                    null,
-
-                  ville:
-                    formulaire.ville ||
-                    null,
-
-                  id_responsable:
-                    formulaire.id_responsable
-                      ? Number(
-                          formulaire.id_responsable
-                        )
-                      : null,
-                }),
-            }
-          );
+        const resultat = await employeService.inviter(
+          {
+            nom: formulaire.nom.trim(),
+            prenom: formulaire.prenom.trim(),
+            email: formulaire.email.trim().toLowerCase(),
+            telephone: formulaire.telephone.trim(),
+            id_role: Number(formulaire.id_role),
+            id_poste: Number(formulaire.id_poste),
+            matricule: formulaire.matricule.trim(),
+            date_embauche: formulaire.date_embauche || null,
+            date_naissance: formulaire.date_naissance || null,
+            adresse: formulaire.adresse || null,
+            ville: formulaire.ville || null,
+            id_responsable: formulaire.id_responsable
+              ? Number(formulaire.id_responsable)
+              : null,
+          },
+          photoFichier
+        );
 
         const activationUrl =
           resultat?.data
@@ -1690,16 +1552,10 @@ export default function Employes({
             formulaire.mot_de_passe;
         }
 
-        await api(
-          `/employes/${employeSelectionne.id}`,
-          {
-            method: "PUT",
-
-            body:
-              JSON.stringify(
-                donnees
-              ),
-          }
+        await employeService.modifier(
+          employeSelectionne.id,
+          donnees,
+          photoFichier
         );
 
         fermerModal();
@@ -1739,17 +1595,9 @@ export default function Employes({
             ? "inactif"
             : "actif";
 
-        await api(
-          `/employes/${employe.id}`,
-          {
-            method: "PUT",
-
-            body:
-              JSON.stringify({
-                statut:
-                  nouveauStatut,
-              }),
-          }
+        await employeService.changerStatut(
+          employe.id,
+          nouveauStatut
         );
 
         fermerMenu();
@@ -1792,11 +1640,8 @@ export default function Employes({
           true
         );
 
-        await api(
-          `/employes/${employeSelectionne.id}`,
-          {
-            method: "DELETE",
-          }
+        await employeService.desactiver(
+          employeSelectionne.id
         );
 
         fermerModal();
@@ -1850,9 +1695,8 @@ const renvoyerInvitation = async (employe) => {
   fermerMenu();
 
   try {
-    const resultat = await api(
-      `/invitations/${employe.id}/renvoyer`,
-      { method: "POST" }
+    const resultat = await employeService.renvoyerInvitation(
+      employe.id
     );
 
     const activationUrl =
@@ -2128,7 +1972,7 @@ const renvoyerInvitation = async (employe) => {
 
       <div className="employees-stats">
 
-        <div className="employee-stat-card">
+        <StatCard className="employee-stat-card">
           <div className="employee-stat-icon">
             <Users size={21} />
           </div>
@@ -2142,9 +1986,9 @@ const renvoyerInvitation = async (employe) => {
               {totalEmployes}
             </strong>
           </div>
-        </div>
+        </StatCard>
 
-        <div className="employee-stat-card">
+        <StatCard className="employee-stat-card">
           <div className="employee-stat-icon success">
             <UserCheck size={21} />
           </div>
@@ -2158,9 +2002,9 @@ const renvoyerInvitation = async (employe) => {
               {employesActifs}
             </strong>
           </div>
-        </div>
+        </StatCard>
 
-        <div className="employee-stat-card">
+        <StatCard className="employee-stat-card">
           <div className="employee-stat-icon warning">
             <Clock3 size={21} />
           </div>
@@ -2174,9 +2018,9 @@ const renvoyerInvitation = async (employe) => {
               {invitationsEnAttente}
             </strong>
           </div>
-        </div>
+        </StatCard>
 
-        <div className="employee-stat-card">
+        <StatCard className="employee-stat-card">
           <div className="employee-stat-icon">
             <ShieldCheck size={21} />
           </div>
@@ -2190,7 +2034,7 @@ const renvoyerInvitation = async (employe) => {
               {responsables}
             </strong>
           </div>
-        </div>
+        </StatCard>
 
       </div>
 
@@ -2443,9 +2287,11 @@ const renvoyerInvitation = async (employe) => {
                         <div className="employee-cell-main">
 
                           <Avatar
-                            employe={
-                              employe
-                            }
+                            src={employe.photo}
+                            name={employe.nom}
+                            initials={employe.initiales}
+                            size="medium"
+                            className="employee-avatar"
                           />
 
                           <div>
@@ -3117,6 +2963,18 @@ const renvoyerInvitation = async (employe) => {
 
                 </label>
 
+                <ImageUploadField
+                  label={t("Photo de profil")}
+                  image={employeSelectionne?.photo}
+                  file={photoFichier}
+                  onChange={setPhotoFichier}
+                  onError={(message) =>
+                    afficherToast(message, "error")
+                  }
+                  disabled={enregistrement}
+                  helperText={t("JPG, PNG ou WebP — 2 Mo maximum.")}
+                />
+
                 {modal ===
                   "modifier" && (
 
@@ -3257,10 +3115,11 @@ const renvoyerInvitation = async (employe) => {
             <div className="employee-profile">
 
               <Avatar
-                employe={
-                  employeSelectionne
-                }
-                large
+                src={employeSelectionne.photo}
+                name={employeSelectionne.nom}
+                initials={employeSelectionne.initiales}
+                size="large"
+                className="employee-avatar employee-avatar-large"
               />
 
               <h2>
@@ -3716,30 +3575,12 @@ const renvoyerInvitation = async (employe) => {
           TOAST
       ======================================================== */}
 
-      {toast && (
-
-        <div
-          className={`employee-toast ${toast.type}`}
-        >
-
-          {toast.type ===
-          "success" ? (
-            <CheckCircle2
-              size={19}
-            />
-          ) : (
-            <AlertCircle
-              size={19}
-            />
-          )}
-
-          <span>
-            {t(toast.message)}
-          </span>
-
-        </div>
-
-      )}
+      <Toast
+        message={toast ? t(toast.message) : ""}
+        type={toast?.type}
+        onClose={fermerToast}
+        className="employee-toast"
+      />
 
     </div>
   );

@@ -36,6 +36,14 @@ import "../styles/pages/dashboard.css";
 
 import { API_URL } from "../config/api";
 import api from "../config/apiClient";
+import { authStorage } from "../services/authStorage";
+import { StatCard } from "../components/common";
+import {
+  formaterNombre,
+  getInitials,
+  lireNomComplet,
+  normaliserTexte,
+} from "../utils/formatters";
 
 /* ============================================================
    VALEURS PAR DÉFAUT
@@ -77,40 +85,11 @@ const EMPTY_DASHBOARD = {
 ============================================================ */
 
 function obtenirToken() {
-  return (
-    localStorage.getItem("gain_office_token") ||
-    localStorage.getItem("token") ||
-    ""
-  );
-}
-
-function normaliserTexte(value) {
-  return String(value || "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+  return authStorage.getToken();
 }
 
 function obtenirNomUtilisateur(utilisateur) {
-  if (!utilisateur) {
-    return "Utilisateur";
-  }
-
-  const nomComplet = [
-    utilisateur.prenom,
-    utilisateur.nom,
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .trim();
-
-  return (
-    nomComplet ||
-    utilisateur.nom_complet ||
-    utilisateur.name ||
-    "Utilisateur"
-  );
+  return lireNomComplet(utilisateur);
 }
 
 function obtenirRole(utilisateur) {
@@ -121,37 +100,6 @@ function obtenirRole(utilisateur) {
       : "") ||
     utilisateur?.role_nom ||
     ""
-  );
-}
-
-function obtenirInitiales(value) {
-  const texte = String(value || "").trim();
-
-  if (!texte) {
-    return "GO";
-  }
-
-  const morceaux = texte
-    .split(/\s+/)
-    .filter(Boolean);
-
-  if (morceaux.length === 1) {
-    return morceaux[0]
-      .slice(0, 2)
-      .toUpperCase();
-  }
-
-  return (
-    morceaux[0][0] +
-    morceaux[morceaux.length - 1][0]
-  ).toUpperCase();
-}
-
-function formaterNombre(value) {
-  const nombre = Number(value);
-
-  return new Intl.NumberFormat("fr-FR").format(
-    Number.isFinite(nombre) ? nombre : 0
   );
 }
 
@@ -755,11 +703,6 @@ const peutNouvelleDemande =
       navigate("/demandes?nouvelle=1");
     }, [navigate]);
 
-  const allerNotifications =
-    useCallback(() => {
-      navigate("/notifications");
-    }, [navigate]);
-
   const allerRapports =
     useCallback(() => {
       navigate("/rapports");
@@ -972,19 +915,9 @@ const peutNouvelleDemande =
         {(estDirecteur ||
           estRH ||
           estAdministrateur) && (
-          <article
+          <StatCard
             className="dashboard-stat-card stat-employes"
             onClick={allerEmployes}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (
-                e.key === "Enter" ||
-                e.key === " "
-              ) {
-                allerEmployes();
-              }
-            }}
           >
             <div className="dashboard-stat-header">
               <div className="dashboard-stat-icon">
@@ -1021,24 +954,14 @@ const peutNouvelleDemande =
 
               <ArrowRight size={13} />
             </div>
-          </article>
+          </StatCard>
         )}
 
         {/* TÂCHES */}
 
-        <article
+        <StatCard
           className="dashboard-stat-card stat-taches"
           onClick={allerTaches}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (
-              e.key === "Enter" ||
-              e.key === " "
-            ) {
-              allerTaches();
-            }
-          }}
         >
           <div className="dashboard-stat-header">
             <div className="dashboard-stat-icon">
@@ -1081,23 +1004,13 @@ const peutNouvelleDemande =
 
             <ArrowRight size={13} />
           </div>
-        </article>
+        </StatCard>
 
         {/* DEMANDES */}
 
-        <article
+        <StatCard
           className="dashboard-stat-card stat-demandes"
           onClick={allerDemandes}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (
-              e.key === "Enter" ||
-              e.key === " "
-            ) {
-              allerDemandes();
-            }
-          }}
         >
           <div className="dashboard-stat-header">
             <div className="dashboard-stat-icon">
@@ -1140,15 +1053,13 @@ const peutNouvelleDemande =
 
             <ArrowRight size={13} />
           </div>
-        </article>
+        </StatCard>
 
         {/* PROGRESSION */}
 
-        <article
+        <StatCard
           className="dashboard-stat-card stat-progression"
           onClick={allerTaches}
-          role="button"
-          tabIndex={0}
         >
           <div className="dashboard-stat-header">
             <div className="dashboard-stat-icon">
@@ -1189,7 +1100,7 @@ const peutNouvelleDemande =
               {t("tâches terminées")}
             </span>
           </div>
-        </article>
+        </StatCard>
       </section>
 
       {/* =====================================================
@@ -1664,7 +1575,7 @@ const peutNouvelleDemande =
                   >
 
                     <div className="dashboard-request-avatar">
-                      {obtenirInitiales(
+                      {getInitials(
                         [
                           demande.demandeur
                             ?.prenom,
@@ -1737,16 +1648,6 @@ const peutNouvelleDemande =
                 </span>
               )}
 
-              <button
-                type="button"
-                className="dashboard-panel-link"
-                onClick={
-                  allerNotifications
-                }
-              >
-                {t("Voir tout")}
-              </button>
-
             </div>
 
           </div>
@@ -1770,8 +1671,7 @@ const peutNouvelleDemande =
 
               {notificationsRecentes.map(
                 (notification, index) => (
-                  <button
-                    type="button"
+                  <div
                     className={`dashboard-notification-row ${
                       notification.lu
                         ? ""
@@ -1781,9 +1681,6 @@ const peutNouvelleDemande =
                       notification.id_notification ||
                       notification.id ||
                       `notification-${index}`
-                    }
-                    onClick={
-                      allerNotifications
                     }
                   >
 
@@ -1821,7 +1718,7 @@ const peutNouvelleDemande =
                       )}
                     </time>
 
-                  </button>
+                  </div>
                 )
               )}
 

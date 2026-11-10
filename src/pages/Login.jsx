@@ -18,6 +18,7 @@ import "../styles/pages/login.css";
 
 import { API_URL } from "../config/api";
 import api from "../config/apiClient";
+import { authStorage } from "../services/authStorage";
 
 function Login({ onConnexion }) {
   const { t } = useLanguage();
@@ -56,7 +57,7 @@ function Login({ onConnexion }) {
 
     try {
       const response = await api.post("/auth/login", {
-        email: email.trim(),
+        email: email.trim().toLowerCase(),
         mot_de_passe: motDePasse,
       });
 
@@ -116,15 +117,7 @@ function Login({ onConnexion }) {
        * =====================================================
        */
 
-      localStorage.setItem(
-        "gain_office_token",
-        data.token
-      );
-
-      localStorage.setItem(
-        "token",
-        data.token
-      );
+      authStorage.setToken(data.token);
 
       /**
        * =====================================================
@@ -308,11 +301,13 @@ function Login({ onConnexion }) {
                     value={email}
                     onChange={(event) =>
                       setEmail(
-                        event.target.value
+                        event.target.value.trimStart()
                       )
                     }
                     placeholder={t("exemple@gain.ci")}
                     autoComplete="email"
+                    autoCapitalize="none"
+                    autoCorrect="off"
                     disabled={chargement}
                     className="login-input"
                   />

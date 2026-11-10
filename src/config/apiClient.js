@@ -6,6 +6,7 @@
 import axios from "axios";
 
 import { API_URL } from "./api";
+import { authStorage } from "../services/authStorage";
 
 const api = axios.create({
   baseURL: API_URL,
@@ -17,9 +18,7 @@ const api = axios.create({
 
 // Ajout automatique du token d'authentification.
 api.interceptors.request.use((config) => {
-  const token =
-    localStorage.getItem("gain_office_token") ||
-    localStorage.getItem("token");
+  const token = authStorage.getToken();
 
   if (token) {
     config.headers = config.headers || {};
@@ -35,10 +34,7 @@ api.interceptors.response.use(
   (error) => {
     // En cas de session expirée, on nettoie la session locale.
     if (error?.response?.status === 401) {
-      localStorage.removeItem("gain_office_token");
-      localStorage.removeItem("token");
-      localStorage.removeItem("gain_office_user");
-      localStorage.removeItem("user");
+      authStorage.clear();
       window.dispatchEvent(new Event("gain-office:session-expired"));
     }
 
